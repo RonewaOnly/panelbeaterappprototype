@@ -5,9 +5,13 @@ import session from "express-session";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import passport from "passport";
+import cors from "cors";
 const app = e(); 
 
 app.use(e.json());
+app.use(e.urlencoded({ extended: true }));
+app.use(e.static(path.join(__dirname, "public")));
+app.use(cors);
 //I want the app to read documents and images from the public folder
 app.use(e.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));

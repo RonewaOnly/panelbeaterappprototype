@@ -6,6 +6,7 @@
 *::-webkit-scrollbar{
     display: none;
 }
+
 body{
     overflow: none;
 
@@ -303,4 +304,161 @@ table tr:hover:nth-child(even) td{
     height: 40px;
     border-bottom-left-radius: 100px;
     background-color: white;
+}
+
+/* Container for the entire form */
+.invoice-form-container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+/* Title styles */
+.form-title {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Form group for inputs */
+.form-group {
+    margin-bottom: 15px;
+}
+
+/* Label styles */
+.form-label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Input field styles */
+.form-input {
+    width: 100%;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Button styles */
+.add-item-btn, .generate-pdf-btn, .remove-item-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.add-item-btn:hover, .generate-pdf-btn:hover, .remove-item-btn:hover {
+    background-color: #45a049;
+}
+
+/* Items section styling */
+.items-title {
+    font-size: 18px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+/* Item container styles */
+.item {
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #f1f1f1;
+}
+
+/* Styling for form in item */
+.item .form-group {
+    margin-bottom: 10px;
+}
+
+/* Remove item button style */
+.remove-item-btn {
+    background-color: #f44336;
+}
+
+.remove-item-btn:hover {
+    background-color: #e53935;
+}
+
+/* General container styling */
+.customers-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+}
+
+/* Table styling */
+.customers-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 16px;
+}
+
+.customers-table th, 
+.customers-table td {
+    text-align: left;
+    padding: 12px;
+    border: 1px solid #ddd;
+}
+
+.customers-table th {
+    background-color: #4caf50;
+    color: white;
+}
+
+.customers-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.customer-row:hover {
+    background-color: #e8f5e9;
+    cursor: pointer;
+}
+
+/* Pop-up section styling */
+.pop-selection {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #e0f7fa;
+    border: 1px solid #4caf50;
+    border-radius: 5px;
+    font-size: 18px;
+    color: #00796b;
+}
+
+/* Error message styling */
+.error-message {
+    color: red;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+/* Responsive design */
+@media screen and (max-width: 600px) {
+    .customers-table {
+        font-size: 14px;
+    }
+
+    .customers-container {
+        padding: 10px;
+    }
+
+    .pop-selection {
+        font-size: 16px;
+    }
 }

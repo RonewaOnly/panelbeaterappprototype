@@ -3,11 +3,19 @@ import React, { useState } from 'react';
 import './MessageInbox.css'; // Import custom CSS for styling
 import { MSG } from './MessageDUMP';
 
-const MessageInbox = ({ selectedMessage }) => {
+const MessageInbox = ({ selectedMessage, onClose }) => {
     const [replies, setReplies] = useState(selectedMessage.replies || []);
     const [newReply, setNewReply] = useState("");
 
+    const handleClose = () => {
+        if (onClose) {
+            onClose(); // Call the provided onClose function
+        }
+    };
+
     const handleSendReply = () => {
+        if (!newReply.trim()) return;
+
         const updatedReplies = [
             ...replies,
             {
@@ -30,6 +38,7 @@ const MessageInbox = ({ selectedMessage }) => {
 
     return (
         <div className="message-inbox-container">
+            <button className="close-btn" onClick={handleClose}>Close</button>
             <header className="chat-header">
                 <img src={selectedMessage.profileImg} alt={selectedMessage.sender} className="chat-profile-img" />
                 <h2>{selectedMessage.sender}</h2>
@@ -47,26 +56,15 @@ const MessageInbox = ({ selectedMessage }) => {
                 ))}
             </div>
             <div className="new-reply-container">
-            
-            {
-                newReply ===''? <><textarea
-                        value={newReply}
-                        onChange={(e) => setNewReply(e.target.value)}
-                        placeholder="Type your reply..." /><button onClick={handleSendReply} disabled>Send</button>
-                        </>   :
-                        <>
-                            <textarea
-                            value={newReply}
-                            onChange={(e) => setNewReply(e.target.value)}
-                            placeholder="Type your reply..."
-                            style={{border: '1px solid red'}}
-                            />
-                            <button onClick={handleSendReply} >Send</button>  
-                        </>
-            }
-
-                
-                
+                <textarea
+                    value={newReply}
+                    onChange={(e) => setNewReply(e.target.value)}
+                    placeholder="Type your reply..."
+                    style={newReply.trim() === "" ? { border: "1px solid red" } : {}}
+                />
+                <button onClick={handleSendReply} disabled={newReply.trim() === ""}>
+                    Send
+                </button>
             </div>
         </div>
     );

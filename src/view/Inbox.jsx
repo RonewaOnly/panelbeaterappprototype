@@ -4,6 +4,8 @@ import './Inbox.css';  // Import the custom CSS for styling
 import { MSG } from '../model/MessageDUMP';
 
 const Inbox = ({ onMessageSelect }) => {
+    
+
     return (
         <div className="inbox-container">
             <h2>Inbox</h2>

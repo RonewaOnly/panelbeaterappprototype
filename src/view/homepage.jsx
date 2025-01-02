@@ -17,9 +17,14 @@ ChartJS.register(
 );
 export default function Homepage() {
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [closeMessageInbox, setCloseMessageInbox] = useState(false);
 
   const handleSelectMessage = (message) => {
     setSelectedMessage(message);
+  };
+  const handleCloseMessageInbox = () => {
+    setCloseMessageInbox(true);
+    setSelectedMessage(null);
   };
 
   return (
@@ -30,23 +35,26 @@ export default function Homepage() {
       </header>
       <div className="Main">
         <div>
-        <div className="showcharts">
-          <h4>It will be displaying charts of users that searched them</h4>
-          <MyChart />
-        </div>
+          <div className="showcharts">
+            <h4>It will be displaying charts of users that searched them</h4>
+            <MyChart />
+          </div>
         </div>
         <>
-        {!selectedMessage ? (
-          <div>
-            <h4>Messages</h4>
-            <Inbox onMessageSelect={handleSelectMessage} />
-          </div>
-        ) : (
-          <div>
-            <h4>Chat with {selectedMessage.sender}</h4>
-            <MessageInbox selectedMessage={selectedMessage} />
-          </div>
-        )}
+          {!selectedMessage ? (
+            <div>
+              <h4>Messages</h4>
+              <Inbox onMessageSelect={handleSelectMessage} />
+            </div>
+          ) : (
+            <div>
+              <h4>Chat with {selectedMessage.sender}</h4>
+              <MessageInbox
+                selectedMessage={selectedMessage}
+                onClose={handleCloseMessageInbox}
+                close={closeMessageInbox}
+              />          </div>
+          )}
         </>
         <div>
           <h4>Report Summary</h4>

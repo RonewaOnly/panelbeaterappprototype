@@ -8,10 +8,12 @@ import passport from "passport";
 import cors from "cors";
 
 import {initialize,close} from "./src/dbConfig.mjs";
+import PanelOwner from "./src/models/user.mjs";
 
 
 
 const app = express();  // Initialized Express correctly
+initialize();//this is the connecting to the database.
 
 // Middleware configuration
 app.use(express.json());  // To parse JSON requests
@@ -58,6 +60,52 @@ app.get('/', async(req, res) => {
      }, 10000);
 
 });
+
+app.post('/login', (req, res) => {
+    // Extract the username and password from the request body
+    const { username, password } = req.body;
+
+    // Check if the username and password are correct
+    if (username === 'admin' && password === 'password') {
+        res.status(200).json({ message: 'Login successful' });
+    } else {
+        res.status(401).json({ message: 'Login failed' });
+    }
+});
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+app.post('/register',(res,req)=>{
+    const {body} = req;
+    var user = new PanelOwner(body);
+    user.registerPanelOwner(user);
+
+})
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Server listening on port 3000
 app.listen(3000, () => {

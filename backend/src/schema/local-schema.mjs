@@ -41,7 +41,8 @@ passport.use(new LocalStrategy(
 ));
 
 passport.serializeUser((user, done) => {
-    done(null, user.id);
+    const safeUser = removeCircularReferences(user)
+    done(null, safeUser[1]);//this is returning the panel beater business name it can be change since the return data is in an array format
 });
 
 passport.deserializeUser(async (id, done) => {

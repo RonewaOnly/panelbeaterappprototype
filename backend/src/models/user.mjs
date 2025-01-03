@@ -1,5 +1,5 @@
 import OracleDB from 'oracledb';
-import dbConfig from './dbConfig.js'; // Import dbConfig.js for the connection pool
+import { initialize,close } from '../dbConfig.mjs';
 import bcrypt from 'bcrypt';
 
 class PanelOwner {

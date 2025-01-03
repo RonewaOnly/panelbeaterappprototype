@@ -75,10 +75,19 @@ app.post('/login', (req, res) => {
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
 });
-app.post('/register',(res,req)=>{
+app.post('/register',async(req,res)=>{
     const {body} = req;
-    var user = new PanelOwner(body);
-    user.registerPanelOwner(user);
+    try{
+        var user = new PanelOwner({body});
+        await PanelOwner.registerPanelOwner(user);
+        res.status(200).json({message: 'Registration successful'});
+
+    }catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Registration failed'});
+
+    }
+
 
 })
 

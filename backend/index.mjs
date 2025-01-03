@@ -1,13 +1,13 @@
 import express from "express";  // Corrected the import statement
-import path from "path"; 
+import path from "path";
 import fs from "fs";
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
-import passport from "passport";
+import passport, { Passport } from 'passport';
 import cors from "cors";
 
-import {initialize,close} from "./src/dbConfig.mjs";
+import { initialize, close } from "./src/dbConfig.mjs";
 import PanelOwner from "./src/models/user.mjs";
 
 
@@ -49,45 +49,79 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Basic route
-app.get('/', async(req, res) => {
+app.get('/', async (req, res) => {
     res.send('Hello World!');
-    
-   await initialize();  // Initialize the connection pool
 
-     //Close the connection pool after 10 seconds
-     setTimeout(async() => {
+    await initialize();  // Initialize the connection pool
+
+    //Close the connection pool after 10 seconds
+    setTimeout(async () => {
         await close();
-     }, 10000);
+    }, 10000);
 
 });
-
-app.post('/login', (req, res) => {
-    // Extract the username and password from the request body
-    const { username, password } = req.body;
-
-    // Check if the username and password are correct
-    if (username === 'admin' && password === 'password') {
-        res.status(200).json({ message: 'Login successful' });
-    } else {
-        res.status(401).json({ message: 'Login failed' });
-    }
+//login using passport-local
+app.post('/login', passport.authenticate('local', { failureRedirect: '/login' }), (req
+    , res) => {
+    res.redirect('/');
 });
+
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
 });
-app.post('/register',async(req,res)=>{
-    const {body} = req;
-    try{
+app.post('/register', async (req, res) => {
+    const { body } = req;
+    try {
         var user = new PanelOwner(body);
         await PanelOwner.registerPanelOwner(user);
-        res.status(200).json({message: 'Registration successful'});
+        res.status(200).json({ message: 'Registration successful' });
 
-    }catch(err){
+    } catch (err) {
         console.log(err);
-        res.status(500).json({message: 'Registration failed'});
+        res.status(500).json({ message: 'Registration failed' });
 
     }
 
+
+});
+//search for panel with email as a parameter
+// Custom function to remove circular references
+function removeCircularReferences(obj) {
+    const seen = new WeakSet();
+    return JSON.parse(JSON.stringify(obj, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+            if (seen.has(value)) {
+                return;  // Avoid circular reference
+            }
+            seen.add(value);
+        }
+        return value;
+    }));
+}
+
+app.get('/search', async (req, res) => {
+    const { query } = req;
+    try {
+        const panel = await PanelOwner.getPanelOwnerByEmail(query.email);
+        const safePanel = removeCircularReferences(panel); // Remove circular references
+        console.log("data from endpoint:", safePanel.length);  // Now log the safePanel
+        res.status(200).send({ data: safePanel[8] });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: 'Search failed' });
+    }
+});
+
+app.get('/user/:email', async (req, res) => {
+    const email = req.params.email;
+    try {
+        var user = await PanelOwner.getPanelOwner(email);
+
+        res.json({ message: 'User found', data: user });
+    } catch (err) {
+        console.log(err);
+        res.status(404).json({ message: 'User not found' });
+    }
 
 })
 

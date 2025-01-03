@@ -43,7 +43,7 @@ class PanelOwner {
                     stuff_number, business_type, business_category, business_sub_category, business_description, 
                     business_website, business_social_media, business_contact, business_email)
                 VALUES 
-                    (:businessName, :ownerName, :registrationDate, :email, :contactNumber, :username, 
+                    (:businessName, :ownerName, TO_DATE(:registrationDate, 'YYYY-MM-DD'), :email, :contactNumber, :username, 
                     :registrationTaxNumber, :password, :registrationDoc, :businessLogo, :businessLocation, 
                     :stuffNumber, :businessType, :businessCategory, :businessSubCategory, :businessDescription, 
                     :businessWebsite, :businessSocialMedia, :businessContact, :businessEmail)
@@ -86,6 +86,21 @@ class PanelOwner {
             }
         }
     }
+    //Static method to fetch a panel owner by id
+    static async fetchPanelOwnerById(id) {
+        try {
+            // Create a new connection
+            const connection = await this.getConnection();
+            // Create a query to fetch the panel owner by id
+            const sql = `SELECT * FROM panel_owners WHERE id = :id`;
+            // Execute the query with the id
+            const result = await connection.execute(sql, { id });
+            // Return the panel owner data
+            return result.rows[0];
+            } catch (err) {
+                console.error('Error fetching panel owner by id:', err.message);
+            }
+    }
 
     // Static method to fetch a panel owner by email
     static async getPanelOwnerByEmail(email) {
@@ -101,6 +116,7 @@ class PanelOwner {
 
             // Execute the query
             const result = await connection.execute(sql, { email });
+            
 
             // Return the panel owner data
             return result.rows[0];  // Assuming the result contains the row data
@@ -157,6 +173,7 @@ class PanelOwner {
     }
     //a function to work on static functions to compare  the hashed password with the password
     static async comparePassword(password, hashedPassword) {
+
         return await bcrypt.compare(password, hashedPassword);
     }
 }

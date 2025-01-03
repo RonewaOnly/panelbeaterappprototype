@@ -6,7 +6,10 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import passport from "passport";
 import cors from "cors";
-import { initialize,close } from "./dbConfig";
+
+import initialize from "./src/dbConfig";
+console.log('Current directory:', __dirname);
+console.log('Trying to import from: ./src/dbConfig.js');
 
 const app = express();  // Initialized Express correctly
 
@@ -44,9 +47,15 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Basic route
-app.get('/', (req, res) => {
+app.get('/', async(req, res) => {
     res.send('Hello World!');
-    initialize();  // Initialize the connection pool
+    
+   await initialize();  // Initialize the connection pool
+
+    // Close the connection pool after 10 seconds
+    // setTimeout(async() => {
+    //    await close();
+    // }, 10000);
 
 });
 

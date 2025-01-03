@@ -78,7 +78,7 @@ app.get('/login', (req, res) => {
 app.post('/register',async(req,res)=>{
     const {body} = req;
     try{
-        var user = new PanelOwner({body});
+        var user = new PanelOwner(body);
         await PanelOwner.registerPanelOwner(user);
         res.status(200).json({message: 'Registration successful'});
 

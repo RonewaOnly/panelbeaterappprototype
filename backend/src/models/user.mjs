@@ -1,6 +1,7 @@
 import OracleDB from 'oracledb';
-import { initialize,close } from '../dbConfig.mjs';
 import bcrypt from 'bcrypt';
+
+import { initialize, close } from '../dbConfig.mjs';
 
 class PanelOwner {
     constructor(data = {}) {
@@ -32,7 +33,8 @@ class PanelOwner {
         try {
             // Get a connection from the pool
             connection = await OracleDB.getConnection();
-
+            // Hash the password (await is required because hashPassword is asynchronous)
+            const hashed = await PanelOwner.hashPassword(panelOwner.password);
             // Prepare an SQL query to insert the panel owner data
             const sql = `
                 INSERT INTO panel_owners 
@@ -56,7 +58,7 @@ class PanelOwner {
                 contactNumber: panelOwner.contactNumber,
                 username: panelOwner.username,
                 registrationTaxNumber: panelOwner.registrationTaxNumber,
-                password: this.hashPassword(panelOwner.password),
+                password: hashed,
                 registrationDoc: panelOwner.registrationDoc,
                 businessLogo: panelOwner.businessLogo,
                 businessLocation: panelOwner.businessLocation,

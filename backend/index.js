@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import passport from "passport";
 import cors from "cors";
+import { initialize,close } from "./dbConfig";
 
 const app = express();  // Initialized Express correctly
 
@@ -45,6 +46,8 @@ app.use(passport.session());
 // Basic route
 app.get('/', (req, res) => {
     res.send('Hello World!');
+    initialize();  // Initialize the connection pool
+
 });
 
 // Server listening on port 3000

@@ -1,8 +1,14 @@
 import OracleDB from 'oracledb';
+import dotenv from 'dotenv';
+dotenv.config();
+
+const username = process.env.DB_USER
+const password = process.env.DB_PASSWORD
+const connectString = process.env.DB_HOST+"/"+process.env.DB_PORT+"/"+process.env.DB_NAME
 const dbConfig = {
-    user: 'your_username',
-    password: 'your_password',
-    connectString: 'localhost/XEPDB1'
+    user: username,
+    password: password,
+    connectString: connectString
 };
 
 async function initialize() {
@@ -24,7 +30,4 @@ async function close() {
     }
 }
 
-module.exports = {
-    initialize,
-    close
-};
+export { initialize, close };

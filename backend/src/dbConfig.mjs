@@ -8,7 +8,6 @@ dotenv.config();
 const username = process.env.DB_USER;
 const password = process.env.DB_PASSWORD;
 const connectString = `${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
-console.log(username);
 
 
 // Database configuration object

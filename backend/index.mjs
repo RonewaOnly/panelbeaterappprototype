@@ -1,9 +1,7 @@
 import express from "express";
 import path from "path";
-import fs from "fs";
 import session from "express-session";
 import { fileURLToPath } from 'url';
-
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import passport from 'passport';
@@ -12,147 +10,230 @@ import './src/schema/local-schema.mjs';
 import { initialize, close } from "./src/dbConfig.mjs";
 import PanelOwner from "./src/models/user.mjs";
 import { createEngine } from "express-react-views";
+import jwt from 'jsonwebtoken';
+import flash from 'connect-flash';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 // Define __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const reactAppURL = 'http://localhost:3001'; // Replace with the actual URL of your React app
-
+const reactAppURL = process.env.REACT_APP_URL || 'http://localhost:3001';
 
 // Initialize database connection once
 await initialize();
 
+// Security middleware
+app.use(helmet());
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
+// CORS configuration
+const corsOptions = {
+    origin: reactAppURL,
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
 // Middleware configuration
-app.use(express.json());
+app.use(express.json({ limit: '5mb' })); // Explicit size limit
 app.use(express.urlencoded({ extended: true }));
 
-// Static files configuration
-app.use(express.static(path.join(__dirname, '../src/views')));
-app.use(express.static(path.join(process.cwd(), 'src', 'views')));
-
-
-console.log(path.join(process.cwd(), 'src', 'view'));
+// Static files configuration with security headers
+app.use(express.static(path.join(__dirname, '../src/views'), {
+    setHeaders: (res, path, stat) => {
+        res.set('X-Content-Type-Options', 'nosniff');
+        res.set('X-Frame-Options', 'DENY');
+    }
+}));
 
 // View engine setup
 app.engine('jsx', createEngine());
 app.set('view engine', 'jsx');
+app.set('views', path.join(process.cwd(), 'src', 'views'));
 
-// CORS setup
-app.use(cors());
+// Body parser setup with explicit limits
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+app.use(bodyParser.json({ limit: '1mb' }));
 
-// Body parser setup
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json({ limit: '10mb' }));
+// Cookie parser with signed cookies
+const COOKIE_SECRET = process.env.COOKIE_SECRET || 'development-secret';
+app.use(cookieParser(COOKIE_SECRET));
 
-// Cookie parser
-app.use(cookieParser());
-
-// Session management
-app.use(session({
-    secret: 'secrets',
+// Session configuration
+const SESSION_SECRET = process.env.SESSION_SECRET || 'development-session-secret';
+const sessionConfig = {
+    secret: SESSION_SECRET,
     saveUninitialized: false,
     resave: false,
+    name: 'sessionId', // Custom session cookie name
     cookie: {
-        maxAge: 60000 * 60 * 2,
-        secure: process.env.NODE_ENV === 'production' // Only use secure in production
-    },
-    // Add a proper session store for production
-    store: process.env.NODE_ENV === 'production' ? /* add your session store here */ undefined : undefined
-}));
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7200000 // 2 hours in milliseconds
+    }
+};
 
-// Passport initialization
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+    sessionConfig.cookie.secure = true;
+}
+
+app.use(session(sessionConfig));
+
+// Flash messages
+app.use(flash());
+app.use((req, res, next) => {
+    res.locals.flashMessages = req.flash();
+    next();
+});
+
+// Passport configuration
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Basic route
+// JWT configuration
+const JWT_SECRET = process.env.JWT_SECRET || 'development-jwt-secret';
+const JWT_EXPIRES = process.env.JWT_EXPIRATION || '1h';
+
+// Authentication middleware
+const authenticateJWT = (req, res, next) => {
+    const token = req.session.token || req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(403).json({ message: 'Invalid or expired token' });
+    }
+};
+
+// Routes
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });
+app.post('/login', (req, res, next) => {
+    console.log("Request body:", req.body); // Log the body of the request
+    next(); // Call the next middleware, 
+},passport.authenticate("local",
+    { failureFlash: true }
+), (req, res) => {
 
-// Login route
-app.post('/login', 
-    (req, res, next) => {
-        console.log("Request body:", req.body);
-        next();
-    },
-    passport.authenticate("local", {
-        successRedirect: '/dashboard',
-        failureRedirect: '/login',
-        failureFlash: true
-    })
+    const session =  JSON.stringify(req.session.passport.user);
+    console.log(`session- ${session}`);
+}
 );
+// app.post('/login', (req, res, next) => {
+    // console.log(req.body);
+    // next()
+// },passport.authenticate("local", {failureRedirect: 'http://localhost:3001/login',failureFlash: true}),
+    // (req, res) => {
+        // const session =  JSON.stringify(req.session.passport);
+// console.log(`session- ${session}`);
+        // try {
+            // const user = req.session.passport.user;
+            // console.error('User:', user);
+            // const token = jwt.sign(
+                // {
+                    // userId: user[0],
+                    // email: user[3]
+                // },
+                // JWT_SECRET,
+                // { expiresIn: JWT_EXPIRES }
+            // );
+
+            // req.session.token = token;
+            // res.json({ message: 'Login successful', token });
+            // //res.redirect(reactAppURL + '/');
+        // } catch (error) {
+            // console.error('Login error:', error);
+            // res.status(500).json({ message: 'Login failed' });
+        // }
+    // }
+// );
 
 app.get('/login', (req, res) => {
-    const filePath = path.join(process.cwd(), '..','src', 'view', 'login.jsx'); // Corrected path
-
     res.redirect(reactAppURL + '/login');
-    res.sendFile(filePath, (err) => {
-      if (err) {
-        console.error('Error sending file:', err);
-        res.status(404).send('File not found');
-      }
-    });
-
-    
-    
 });
 
-// Registration route
 app.post('/register', async (req, res) => {
-    const { body } = req;
     try {
-        const user = new PanelOwner(body);
+        // Input validation (add your validation logic here)
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+
+        const user = new PanelOwner(req.body);
         await PanelOwner.registerPanelOwner(user);
-        res.status(200).json({ message: 'Registration successful' });
+        res.status(201).json({ message: 'Registration successful' });
     } catch (err) {
         console.error('Registration error:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             message: 'Registration failed',
-            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+            error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
         });
     }
 });
 
-// Search route
-app.get('/search', async (req, res) => {
-    const { query } = req;
+// Protected routes
+app.get('/search', authenticateJWT, async (req, res) => {
     try {
-        const panel = await PanelOwner.getPanelOwnerByEmail(query.email);
-        if (!panel || !panel.length) {
+        const { email } = req.query;
+        if (!email) {
+            return res.status(400).json({ message: 'Email parameter required' });
+        }
+
+        const panel = await PanelOwner.getPanelOwnerByEmail(email);
+        if (!panel?.length) {
             return res.status(404).json({ message: 'No results found' });
         }
+
         const safePanel = removeCircularReferences(panel);
         res.status(200).json({ data: safePanel });
     } catch (err) {
         console.error('Search error:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             message: 'Search failed',
-            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+            error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
         });
     }
 });
 
-// User route
-app.get('/user/:email', async (req, res) => {
-    const email = req.params.email;
+app.get('/user/:email', authenticateJWT, async (req, res) => {
     try {
+        const { email } = req.params;
         const user = await PanelOwner.getPanelOwner(email);
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        res.json({ message: 'User found', data: user });
+
+        res.json({ data: user });
     } catch (err) {
         console.error('User lookup error:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             message: 'Error finding user',
-            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+            error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
         });
     }
 });
 
-// Circular reference removal utility
+// Utility function
 function removeCircularReferences(obj) {
     const seen = new WeakSet();
     return JSON.parse(JSON.stringify(obj, (key, value) => {
@@ -166,24 +247,34 @@ function removeCircularReferences(obj) {
     }));
 }
 
-// Error handling middleware
+// Global error handler
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
     res.status(500).json({
         message: 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
     });
 });
 
-// Graceful shutdown handler
-process.on('SIGTERM', async () => {
-    console.log('Received SIGTERM. Performing graceful shutdown...');
-    await close();
-    process.exit(0);
-});
+// Graceful shutdown
+const shutdown = async () => {
+    console.log('Performing graceful shutdown...');
+    try {
+        await close();
+        process.exit(0);
+    } catch (err) {
+        console.error('Error during shutdown:', err);
+        process.exit(1);
+    }
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 // Server startup
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+export default app;

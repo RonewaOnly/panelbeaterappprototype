@@ -1,7 +1,6 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import PanelOwner from '../models/user.mjs';
-
 // Custom function to remove circular references
 function removeCircularReferences(obj) {
     const seen = new WeakSet();

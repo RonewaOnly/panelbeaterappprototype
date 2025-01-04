@@ -2,6 +2,8 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import session from "express-session";
+import { fileURLToPath } from 'url';
+
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import passport from 'passport';
@@ -11,7 +13,13 @@ import { initialize, close } from "./src/dbConfig.mjs";
 import PanelOwner from "./src/models/user.mjs";
 import { createEngine } from "express-react-views";
 
+// Define __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
+const reactAppURL = 'http://localhost:3001'; // Replace with the actual URL of your React app
+
 
 // Initialize database connection once
 await initialize();
@@ -21,7 +29,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Static files configuration
-app.use(express.static(path.join("./frontend/", "views")));
+app.use(express.static(path.join(__dirname, '../src/views')));
+app.use(express.static(path.join(process.cwd(), 'src', 'views')));
+
+
+console.log(path.join(process.cwd(), 'src', 'view'));
 
 // View engine setup
 app.engine('jsx', createEngine());
@@ -73,7 +85,18 @@ app.post('/login',
 );
 
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'login.jsx'));
+    const filePath = path.join(process.cwd(), '..','src', 'view', 'login.jsx'); // Corrected path
+
+    res.redirect(reactAppURL + '/login');
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error('Error sending file:', err);
+        res.status(404).send('File not found');
+      }
+    });
+
+    
+    
 });
 
 // Registration route

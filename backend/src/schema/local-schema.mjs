@@ -1,13 +1,13 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import PanelOwner from '../models/user.mjs';
-// Custom function to remove circular references
+
 function removeCircularReferences(obj) {
     const seen = new WeakSet();
     return JSON.parse(JSON.stringify(obj, (key, value) => {
         if (typeof value === 'object' && value !== null) {
             if (seen.has(value)) {
-                return;  // Avoid circular reference
+                return;
             }
             seen.add(value);
         }
@@ -15,41 +15,74 @@ function removeCircularReferences(obj) {
     }));
 }
 
+// Add logging to track authentication flow
 passport.use(new LocalStrategy(
     {
-        usernameField: 'email', // Assuming you're using email as the username
-        passwordField: 'password'
+        usernameField: 'email',
+        passwordField: 'password',
+        passReqToCallback: true // Add this to get more context
     },
-    async (email, password, done) => {
+    async (req, email, password, done) => {
         try {
+            console.log('Authenticating user with email:', email);
+            
             const user = await PanelOwner.getPanelOwnerByEmail(email);
+            console.log('User found:', !!user); // Log if user was found (true/false)
+            
             if (!user) {
+                console.log('Authentication failed: User not found');
                 return done(null, false, { message: 'Incorrect email.' });
             }
-            const safePanel = removeCircularReferences(user)
-            const hasedpassword = safePanel[8];
-            const isMatch = await PanelOwner.comparePassword(password,hasedpassword); // Assuming you have a method to compare passwords
+
+            const safePanel = removeCircularReferences(user);
+            const hashedPassword = safePanel[8];
+            
+            console.log('Comparing passwords...');
+            const isMatch = await PanelOwner.comparePassword(password, hashedPassword);
+            console.log('Password match:', isMatch);
+
             if (!isMatch) {
+                console.log('Authentication failed: Incorrect password');
                 return done(null, false, { message: 'Incorrect password.' });
             }
-            return done(null, user);
+
+            console.log('Authentication successful');
+            return done(null, safePanel);
         } catch (err) {
+            console.error('Authentication error:', err);
             return done(err);
         }
     }
 ));
 
 passport.serializeUser((user, done) => {
-    const safeUser = removeCircularReferences(user)
-    done(null, safeUser[1]);//this is returning the panel beater business name it can be change since the return data is in an array format
+    try {
+        console.log('Serializing user:', user[0]); // Log just the ID or relevant identifier
+        const safeUser = removeCircularReferences(user);
+        done(null, safeUser[0]); // Store just the user ID in the session
+    } catch (err) {
+        console.error('Serialization error:', err);
+        done(err);
+    }
 });
 
 passport.deserializeUser(async (id, done) => {
     try {
+        console.log('Deserializing user ID:', id);
         const user = await PanelOwner.fetchPanelOwnerById(id);
-        done(null, user);
+        
+        if (!user) {
+            console.log('Deserialization failed: User not found');
+            return done(null, false);
+        }
+
+        const safeUser = removeCircularReferences(user);
+        console.log('User deserialized successfully');
+        done(null, safeUser);
     } catch (err) {
+        console.error('Deserialization error:', err);
         done(err);
     }
 });
-export default passport
+
+export default passport;

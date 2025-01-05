@@ -1,23 +1,38 @@
 import { useState } from 'react';
 import './style.css';
-import { USERS } from '../model/user';
 import { Link } from 'react-router-dom';
+import { login } from '../redux/actions/authActions';
+import { useAuth } from '../redux/reducers/authReducer';
 
 export default function Login({ action }) {
-    console.log("Login page action:", action);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleLogin = () => {
+    const { state, dispatch } = useAuth(); // Access auth state and dispatch from context
+
+    const handleLogin =  () => {
         if (!username || !password) {
             setError('Username/Email and Password are required.');
             return;
         }
-
-        // Assuming USERS[0] represents the current user for demo purposes
-        USERS[0].online = true;
-        action()
+        //console.log('function to handle the server login: '+login(username, password)(dispatch))
+        try {
+            // Dispatch the login action
+            login(username, password)(dispatch)
+            // Check for authentication status
+            if (state.isAuthenticated) {
+                console.log('Logged in:', state.isAuthenticated);
+                action(); // Call the action prop
+                console.log('funtion',action());
+            } else if (state.error) {
+                setError(state.error.message || 'Login failed. Please try again.');
+                console.log('Error:', state.error.message);
+            }
+        } catch (err) {
+            console.error('Login error:', err);
+            setError('An unexpected error occurred. Please try again later.');
+        }
     };
 
     return (

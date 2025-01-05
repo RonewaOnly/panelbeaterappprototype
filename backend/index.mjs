@@ -127,48 +127,38 @@ app.get('/', (req, res) => {
     res.send('Hello World!');
 });
 app.post('/login', (req, res, next) => {
-    console.log("Request body:", req.body); // Log the body of the request
-    next(); // Call the next middleware, 
-},passport.authenticate("local",
-    { failureFlash: true }
-), (req, res) => {
-
-    const session =  JSON.stringify(req.session.passport.user);
-    console.log(`session- ${session}`);
-}
+    console.log('Headers:', req.headers);
+    console.log('Content-Type:', req.headers['content-type']);
+        next()},
+    passport.authenticate("local", { failureFlash: true }), // authenticate first
+    (req, res) => {
+        const session = JSON.stringify(req.session.passport);
+        console.log(`session- ${session}`);
+        try {
+            const user = req.session.passport.user;
+            console.error('User:', user);
+            const token = jwt.sign(
+                {
+                    userId: user[0],
+                    email: user[3]
+                },
+                JWT_SECRET,
+                { expiresIn: JWT_EXPIRES }
+            )
+            req.session.token = token;
+            console.log('Token after login:', token); // Debugging the token
+            res.json({ message: 'Login successful', token });
+            //res.redirect(reactAppURL + '/');
+        } catch (error) {
+            console.error('Login error:', error);
+            res.status(500).json({ message: 'Login failed' });
+        }
+    }
 );
-// app.post('/login', (req, res, next) => {
-    // console.log(req.body);
-    // next()
-// },passport.authenticate("local", {failureRedirect: 'http://localhost:3001/login',failureFlash: true}),
-    // (req, res) => {
-        // const session =  JSON.stringify(req.session.passport);
-// console.log(`session- ${session}`);
-        // try {
-            // const user = req.session.passport.user;
-            // console.error('User:', user);
-            // const token = jwt.sign(
-                // {
-                    // userId: user[0],
-                    // email: user[3]
-                // },
-                // JWT_SECRET,
-                // { expiresIn: JWT_EXPIRES }
-            // );
 
-            // req.session.token = token;
-            // res.json({ message: 'Login successful', token });
-            // //res.redirect(reactAppURL + '/');
-        // } catch (error) {
-            // console.error('Login error:', error);
-            // res.status(500).json({ message: 'Login failed' });
-        // }
-    // }
-// );
-
-app.get('/login', (req, res) => {
-    res.redirect(reactAppURL + '/login');
-});
+// app.get('/login', (req, res) => {
+//     res.redirect(reactAppURL + '/login');
+// });
 
 app.post('/register', async (req, res) => {
     try {

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Homepage from './homepage';
 import NavBar from '../model/navbar';
 import './style.css';
@@ -9,7 +9,7 @@ import InvoiceForm from './Invoice';
 import Customers from './customers';
 import Report from './reports';
 import Logout from './logout';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Registartion from './registartion';
 import MessageInbox from '../model/MessageInbox';
 
@@ -18,11 +18,20 @@ export default function MainScreen() {
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [closeMessageInbox, setCloseMessageInbox] = useState(false);
 
+    useEffect(() => {
+        // Check local storage for token and set authentication state
+        const token = localStorage.getItem('token');
+        if (token) {
+            setIsAuthenticated(true);
+        }
+    }, []);
+
     const handleLogin = () => {
         setIsAuthenticated(true);
     };
 
     const handleLogout = () => {
+        //localStorage.removeItem('token'); // Clear token on logout
         setIsAuthenticated(false);
     };
 
@@ -43,7 +52,7 @@ export default function MainScreen() {
                     {isAuthenticated ? (
                         <>
                             <Route path="/" element={<Homepage />} />
-                            <Route path="/logout" element={<Logout onLogout={handleLogout} />} />
+                            <Route path="/logout" element={<Logout action={handleLogout} />} />
                             <Route path="/customers" element={<Customers />} />
                             <Route
                                 path="/inbox"
@@ -62,11 +71,13 @@ export default function MainScreen() {
                             <Route path="/report" element={<Report />} />
                             <Route path="/invoice" element={<InvoiceForm />} />
                             <Route path="/profile" element={<Profile />} />
+                            <Route path="*" element={<Navigate to="/" />} /> {/* Redirect to home */}
                         </>
                     ) : (
                         <>
                             <Route path="/login" element={<Login action={handleLogin} />} />
                             <Route path="/signup" element={<Registartion />} />
+                            <Route path="*" element={<Navigate to="/login" />} /> {/* Redirect to login */}
                         </>
                     )}
                 </Routes>

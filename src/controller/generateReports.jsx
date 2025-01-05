@@ -1,4 +1,3 @@
-// File: /src/controller/reports.js
 
 export const generateReportData = (interactions) => {
     const totalRequests = interactions.length;

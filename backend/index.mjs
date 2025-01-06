@@ -14,12 +14,24 @@ import jwt from 'jsonwebtoken';
 import flash from 'connect-flash';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import { createServer } from "http";
+import { Server } from "socket.io";
+import ChatSpace from "./src/routes/chat-room.mjs";
 
 // Define __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:3001",
+        methods: ["GET", "POST"],
+        credentials: true,
+      },
+});
+
 const reactAppURL = process.env.REACT_APP_URL || 'http://localhost:3001';
 
 // Initialize database connection once
@@ -47,6 +59,12 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '5mb' })); // Explicit size limit
 app.use(express.urlencoded({ extended: true }));
 
+//this is the route to use for the chat space or room
+// Initialize ChatSpace
+const chatRouter = ChatSpace(io);
+
+// Use the chat router
+app.use("/chat", chatRouter);
 // Static files configuration with security headers
 app.use(express.static(path.join(__dirname, '../src/views'), {
     setHeaders: (res, path, stat) => {
@@ -222,6 +240,7 @@ app.get('/user/:email', authenticateJWT, async (req, res) => {
         });
     }
 });
+
 
 // Utility function
 function removeCircularReferences(obj) {

@@ -1,73 +1,98 @@
-// File: /src/MessageInbox.jsx
-import React, { useState } from 'react';
-import './MessageInbox.css'; // Import custom CSS for styling
-import { MSG } from './MessageDUMP';
+import React, { useState, useEffect } from "react";
+import { io } from "socket.io-client";
+import "./MessageInbox.css";
+
+const socket = io("http://localhost:3000/chat", {
+  auth: {
+    token: localStorage.getItem("token"), // Token-based authentication
+  },
+});
 
 const MessageInbox = ({ selectedMessage, onClose }) => {
-    const [replies, setReplies] = useState(selectedMessage.replies || []);
-    const [newReply, setNewReply] = useState("");
+  const [replies, setReplies] = useState([]);
+  const [newReply, setNewReply] = useState("");
 
-    const handleClose = () => {
-        if (onClose) {
-            onClose(); // Call the provided onClose function
+  useEffect(() => {
+    if (selectedMessage) {
+      // Fetch chat history when a message is selected
+      socket.emit("fetch_chat_history", selectedMessage.roomId);
+
+      socket.on("chat_history", (history) => {
+        setReplies(history);
+      });
+
+      // Listen for new messages in the room
+      socket.on("receive_message", (message) => {
+        if (message.roomId === selectedMessage.roomId) {
+          setReplies((prevReplies) => [...prevReplies, message]);
         }
+      });
+    }
+
+    return () => {
+      socket.off("chat_history");
+      socket.off("receive_message");
+    };
+  }, [selectedMessage]);
+
+  const handleSendReply = () => {
+    if (!newReply.trim()) return;
+
+    const messageObj = {
+      roomId: selectedMessage.roomId,
+      message: newReply,
     };
 
-    const handleSendReply = () => {
-        if (!newReply.trim()) return;
+    // Emit the message to the backend
+    socket.emit("send_message", messageObj);
 
-        const updatedReplies = [
-            ...replies,
-            {
-                sender: selectedMessage.receiver,
-                receiver: selectedMessage.sender,
-                message: newReply,
-                date: new Date().toLocaleDateString(),
-                time: new Date().toLocaleTimeString(),
-            },
-        ];
-        setReplies(updatedReplies);
-        setNewReply("");
+    setNewReply("");
+  };
 
-        const messageIndex = MSG.findIndex(msg => msg.id === selectedMessage.id);
-        if (messageIndex !== -1) {
-            MSG[messageIndex].replies = updatedReplies;
-            MSG[messageIndex].isReply = true;
-        }
-    };
+  if (!selectedMessage) {
+    return <div>No message selected.</div>;
+  }
 
-    return (
-        <div className="message-inbox-container">
-            <button className="close-btn" onClick={handleClose}>Close</button>
-            <header className="chat-header">
-                <img src={selectedMessage.profileImg} alt={selectedMessage.sender} className="chat-profile-img" />
-                <h2>{selectedMessage.sender}</h2>
-            </header>
-            <div className="messages">
-                <div className="message original-message">
-                    <p>{selectedMessage.message}</p>
-                    <small>{selectedMessage.date} {selectedMessage.time}</small>
-                </div>
-                {replies.map((reply, index) => (
-                    <div className="message reply-message" key={index}>
-                        <p>{reply.message}</p>
-                        <small>{reply.date} {reply.time}</small>
-                    </div>
-                ))}
-            </div>
-            <div className="new-reply-container">
-                <textarea
-                    value={newReply}
-                    onChange={(e) => setNewReply(e.target.value)}
-                    placeholder="Type your reply..."
-                    style={newReply.trim() === "" ? { border: "1px solid red" } : {}}
-                />
-                <button onClick={handleSendReply} disabled={newReply.trim() === ""}>
-                    Send
-                </button>
-            </div>
-        </div>
-    );
+  return (
+    <div className="message-inbox-container">
+      <button className="close-btn" onClick={onClose} aria-label="Close chat">
+        Close
+      </button>
+      <header className="chat-header">
+        <img
+          src={selectedMessage.profileImg}
+          alt={`${selectedMessage.sender}'s profile`}
+          className="chat-profile-img"
+        />
+        <h2>{selectedMessage.sender}</h2>
+      </header>
+      <div className="messages">
+        {replies.map((reply, index) => (
+          <div
+            key={index}
+            className={`message ${reply.sender === selectedMessage.receiver ? "reply-message" : "sent-message"}`}
+          >
+            <p>{reply.message}</p>
+            <small>
+              {new Date(reply.timestamp).toLocaleDateString()}{" "}
+              {new Date(reply.timestamp).toLocaleTimeString()}
+            </small>
+          </div>
+        ))}
+      </div>
+      <div className="new-reply-container">
+        <textarea
+          value={newReply}
+          onChange={(e) => setNewReply(e.target.value)}
+          placeholder="Type your reply..."
+          aria-label="Type your reply"
+        />
+        <button onClick={handleSendReply} disabled={!newReply.trim()} aria-label="Send reply">
+          Send
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default MessageInbox;

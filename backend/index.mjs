@@ -35,8 +35,16 @@ const io = new Server(server, {
 const reactAppURL = process.env.REACT_APP_URL || 'http://localhost:3001';
 
 // Initialize database connection once
-await initialize();
-
+// Initialize database connection
+(async () => {
+    try {
+        await initialize();
+        console.log("Database initialized successfully");
+    } catch (error) {
+        console.error("Failed to initialize database:", error);
+        process.exit(1); // Exit the process if the database fails to initialize
+    }
+})();
 // Security middleware
 app.use(helmet());
 
@@ -132,6 +140,7 @@ const authenticateJWT = (req, res, next) => {
     }
 
     try {
+
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded;
         next();
@@ -150,7 +159,7 @@ app.post('/login', (req, res, next) => {
         next()},
     passport.authenticate("local", { failureFlash: true }), // authenticate first
     (req, res) => {
-        const session = JSON.stringify(req.session.passport);
+        const session = req.session.passport;
         console.log(`session- ${session}`);
         try {
             const user = req.session.passport.user;
@@ -165,7 +174,7 @@ app.post('/login', (req, res, next) => {
             )
             req.session.token = token;
             console.log('Token after login:', token); // Debugging the token
-            res.json({ message: 'Login successful', token });
+            res.json({ message: 'Login successful', token,session });
             //res.redirect(reactAppURL + '/');
         } catch (error) {
             console.error('Login error:', error);
@@ -280,10 +289,10 @@ const shutdown = async () => {
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
-// Server startup
+// Start the server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+server.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 export default app;

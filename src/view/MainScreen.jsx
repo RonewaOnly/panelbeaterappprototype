@@ -37,6 +37,7 @@ export default function MainScreen() {
 
     const handleSelectMessage = (message) => {
         setSelectedMessage(message);
+        console.log("selected message:"+message);
     };
 
     const handleCloseMessageInbox = () => {

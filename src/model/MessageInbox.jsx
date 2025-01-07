@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { io } from "socket.io-client";
 import "./MessageInbox.css";
-
-const socket = io("http://localhost:3000/chat", {
-  auth: {
-    token: localStorage.getItem("token"), // Token-based authentication
-  },
-});
+import socket from "../socket";
 
 const MessageInbox = ({ selectedMessage, onClose }) => {
   const [replies, setReplies] = useState([]);
@@ -14,8 +8,10 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
 
   useEffect(() => {
     if (selectedMessage) {
+      const { roomId } = selectedMessage;
+
       // Fetch chat history when a message is selected
-      socket.emit("fetch_chat_history", selectedMessage.roomId);
+      socket.emit("fetch_chat_history", roomId);
 
       socket.on("chat_history", (history) => {
         setReplies(history);
@@ -23,16 +19,17 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
 
       // Listen for new messages in the room
       socket.on("receive_message", (message) => {
-        if (message.roomId === selectedMessage.roomId) {
+        if (message.roomId === roomId) {
           setReplies((prevReplies) => [...prevReplies, message]);
         }
       });
-    }
 
-    return () => {
-      socket.off("chat_history");
-      socket.off("receive_message");
-    };
+      // Cleanup listeners on component unmount or when selectedMessage changes
+      return () => {
+        socket.off("chat_history");
+        socket.off("receive_message");
+      };
+    }
   }, [selectedMessage]);
 
   const handleSendReply = () => {
@@ -46,16 +43,34 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
     // Emit the message to the backend
     socket.emit("send_message", messageObj);
 
+    // Optimistically update the UI before server confirmation
+    setReplies((prevReplies) => [
+      ...prevReplies,
+      {
+        ...messageObj,
+        sender: "You",
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+
     setNewReply("");
   };
 
   if (!selectedMessage) {
-    return <div>No message selected.</div>;
+    return (
+      <div className="message-inbox-placeholder">
+        <p>No message selected. Please select a conversation to view messages.</p>
+      </div>
+    );
   }
 
   return (
     <div className="message-inbox-container">
-      <button className="close-btn" onClick={onClose} aria-label="Close chat">
+      <button
+        className="close-btn"
+        onClick={onClose}
+        aria-label="Close chat"
+      >
         Close
       </button>
       <header className="chat-header">
@@ -70,7 +85,9 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
         {replies.map((reply, index) => (
           <div
             key={index}
-            className={`message ${reply.sender === selectedMessage.receiver ? "reply-message" : "sent-message"}`}
+            className={`message ${
+              reply.sender === "You" ? "sent-message" : "reply-message"
+            }`}
           >
             <p>{reply.message}</p>
             <small>
@@ -87,7 +104,11 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
           placeholder="Type your reply..."
           aria-label="Type your reply"
         />
-        <button onClick={handleSendReply} disabled={!newReply.trim()} aria-label="Send reply">
+        <button
+          onClick={handleSendReply}
+          disabled={!newReply.trim()}
+          aria-label="Send reply"
+        >
           Send
         </button>
       </div>

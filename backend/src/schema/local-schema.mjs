@@ -59,7 +59,12 @@ passport.serializeUser((user, done) => {
     try {
         console.log('Serializing user:', user[0]); // Log just the ID or relevant identifier
         const safeUser = removeCircularReferences(user);
-        done(null, safeUser[0]); // Store just the user ID in the session
+        let findUser = {
+            id: safeUser[0],
+            name: safeUser[1],
+            email: safeUser[2]
+        }
+        done(null, safeUser); // Store just the user ID in the session
     } catch (err) {
         console.error('Serialization error:', err);
         done(err);

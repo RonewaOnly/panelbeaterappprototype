@@ -52,7 +52,7 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
         timestamp: new Date().toISOString(),
       },
     ]);
-
+    console.log("Message sent:", messageObj);
     setNewReply("");
   };
 

@@ -163,12 +163,10 @@ app.post('/login', (req, res, next) => {
         console.log(`session- ${session}`);
         try {
             const user = req.session.passport.user;
+            //store the session in a token
             console.error('User:', user);
             const token = jwt.sign(
-                {
-                    userId: user[0],
-                    email: user[3]
-                },
+                session,
                 JWT_SECRET,
                 { expiresIn: JWT_EXPIRES }
             )

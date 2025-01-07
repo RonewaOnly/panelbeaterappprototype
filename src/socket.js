@@ -7,6 +7,5 @@ const socket = io("http://localhost:3000", {
     },
     withCredentials: true,
 });
-
 // Export the socket instance for reuse
 export default socket;

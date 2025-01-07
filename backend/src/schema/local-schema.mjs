@@ -61,10 +61,13 @@ passport.serializeUser((user, done) => {
         const safeUser = removeCircularReferences(user);
         let findUser = {
             id: safeUser[0],
-            name: safeUser[1],
-            email: safeUser[2]
+            business_Name: safeUser[1],
+            owner_name: safeUser[2],
+            email: safeUser[4],
+            phone: safeUser[5],
+            username: safeUser[6],
         }
-        done(null, safeUser); // Store just the user ID in the session
+        done(null, findUser); // Store just the user ID in the session
     } catch (err) {
         console.error('Serialization error:', err);
         done(err);

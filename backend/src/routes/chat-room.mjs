@@ -30,7 +30,7 @@ const ChatSpace = (io) => {
   });
 
   // Handle connection
-  io.on("connection", (socket) => {
+  io.on("connection" ,(socket) => {
     console.log("Client connected");
     //how to view the an [object object] in the console
     console.log(socket.user);

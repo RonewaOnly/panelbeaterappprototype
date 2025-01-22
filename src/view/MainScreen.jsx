@@ -12,11 +12,15 @@ import Logout from './logout';
 import { useEffect, useState } from 'react';
 import Registartion from './registartion';
 import MessageInbox from '../model/MessageInbox';
+import { useAuth } from '../redux/reducers/authReducer';
 
 export default function MainScreen() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [closeMessageInbox, setCloseMessageInbox] = useState(false);
+    const { state } = useAuth();
+
+
 
     useEffect(() => {
         // Check local storage for token and set authentication state
@@ -24,10 +28,16 @@ export default function MainScreen() {
         if (token) {
             setIsAuthenticated(true);
         }
+
     }, []);
 
     const handleLogin = () => {
         setIsAuthenticated(true);
+        //check for the state of the user
+        if (!state.user) {
+            console.log('User not logged in')
+        }
+        console.log('User logged in ID->', state.user.session.user.id);
     };
 
     const handleLogout = () => {
@@ -36,8 +46,9 @@ export default function MainScreen() {
     };
 
     const handleSelectMessage = (message) => {
-        setSelectedMessage(message);
-        console.log("selected message:"+message);
+        const msg = { ...message, roomId: `${state.user.session.user.id}-${message.id}` };
+        setSelectedMessage(msg);
+        console.log("messages:",message);
     };
 
     const handleCloseMessageInbox = () => {

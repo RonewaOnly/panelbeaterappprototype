@@ -1,4 +1,3 @@
-// File: /src/Inbox.jsx
 import React from 'react';
 import './Inbox.css';  // Import the custom CSS for styling
 import { MSG } from '../model/MessageDUMP';

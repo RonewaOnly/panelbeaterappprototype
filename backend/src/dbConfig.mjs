@@ -16,7 +16,12 @@ const dbConfig = {
     password: password,
     connectString: connectString,
     // Specify SYSDBA or SYSOPER role
-    connectionRole: OracleDB.SYSDBA
+    connectionRole: OracleDB.SYSDBA,
+    poolMin: 2,
+    poolMax: 10,
+    poolIncrement: 2,
+    queueTimeout: 120000, // Set to 120 seconds
+
 };
 
 // Initialize the connection pool

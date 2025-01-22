@@ -1,11 +1,15 @@
 import { io } from "socket.io-client";
 
-// Establish a connection to the backend
 const socket = io("http://localhost:3000", {
-    auth: {
-        token: localStorage.getItem("token"), // Assuming you store JWT in localStorage
-    },
-    withCredentials: true,
+  auth: {
+    token: localStorage.getItem("token"), // Replace with your token retrieval logic
+  },
+  withCredentials: true,
 });
-// Export the socket instance for reuse
+
+// Handle connection errors
+socket.on("connect_error", (err) => {
+  console.error("Socket connection error:", err.message);
+});
+
 export default socket;

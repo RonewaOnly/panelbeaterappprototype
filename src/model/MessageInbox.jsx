@@ -10,21 +10,18 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
     if (selectedMessage) {
       const { roomId } = selectedMessage;
 
-      // Fetch chat history when a message is selected
+      // Fetch chat history
       socket.emit("fetch_chat_history", roomId);
 
-      socket.on("chat_history", (history) => {
-        setReplies(history);
-      });
-
-      // Listen for new messages in the room
+      // Listen for chat history and new messages
+      socket.on("chat_history", (history) => setReplies(history || []));
       socket.on("receive_message", (message) => {
         if (message.roomId === roomId) {
           setReplies((prevReplies) => [...prevReplies, message]);
         }
       });
 
-      // Cleanup listeners on component unmount or when selectedMessage changes
+      // Cleanup listeners
       return () => {
         socket.off("chat_history");
         socket.off("receive_message");
@@ -39,11 +36,14 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
       roomId: selectedMessage.roomId,
       message: newReply,
     };
+    socket.emit("send_message", messageObj, (response) => {
+      if (response?.error) {
+        console.error("Message send error:", response.error);
+        return;
+      }
+    });
 
-    // Emit the message to the backend
-    socket.emit("send_message", messageObj);
-
-    // Optimistically update the UI before server confirmation
+    // Optimistic UI update
     setReplies((prevReplies) => [
       ...prevReplies,
       {
@@ -52,7 +52,6 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
         timestamp: new Date().toISOString(),
       },
     ]);
-    console.log("Message sent:", messageObj);
     setNewReply("");
   };
 
@@ -66,11 +65,7 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
 
   return (
     <div className="message-inbox-container">
-      <button
-        className="close-btn"
-        onClick={onClose}
-        aria-label="Close chat"
-      >
+      <button className="close-btn" onClick={onClose}>
         Close
       </button>
       <header className="chat-header">
@@ -82,6 +77,14 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
         <h2>{selectedMessage.sender}</h2>
       </header>
       <div className="messages">
+        {/* Render the sender's initial message */}
+        {selectedMessage.sender !== "You" && (
+          <div className="message original-message">
+            <p>{selectedMessage.message}</p>
+            <small>{selectedMessage.timestamp}</small>
+          </div>
+        )}
+
         {replies.map((reply, index) => (
           <div
             key={index}
@@ -90,10 +93,7 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
             }`}
           >
             <p>{reply.message}</p>
-            <small>
-              {new Date(reply.timestamp).toLocaleDateString()}{" "}
-              {new Date(reply.timestamp).toLocaleTimeString()}
-            </small>
+            <small>{new Date(reply.timestamp).toLocaleString()}</small>
           </div>
         ))}
       </div>
@@ -102,13 +102,8 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
           value={newReply}
           onChange={(e) => setNewReply(e.target.value)}
           placeholder="Type your reply..."
-          aria-label="Type your reply"
         />
-        <button
-          onClick={handleSendReply}
-          disabled={!newReply.trim()}
-          aria-label="Send reply"
-        >
+        <button onClick={handleSendReply} disabled={!newReply.trim()} aria-label="Send reply">
           Send
         </button>
       </div>

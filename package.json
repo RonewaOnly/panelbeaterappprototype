@@ -8,6 +8,7 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.9",
     "chart.js": "^4.4.3",
+    "html2canvas": "^1.4.1",
     "http": "^0.0.1-security",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",

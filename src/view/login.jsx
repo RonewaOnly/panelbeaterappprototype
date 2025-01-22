@@ -20,11 +20,11 @@ export default function Login({ action }) {
         try {
             // Dispatch the login action
             login(username, password)(dispatch)
+            //console.log(state)
             // Check for authentication status
             if (state.isAuthenticated) {
                 console.log('Logged in:', state.isAuthenticated);
                 action(); // Call the action prop
-                console.log('funtion',action());
             } else if (state.error) {
                 setError(state.error.message || 'Login failed. Please try again.');
                 console.log('Error:', state.error.message);

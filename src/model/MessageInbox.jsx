@@ -55,7 +55,7 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
       ...prevReplies,
       {
         ...messageObj,
-        sender: "You",
+        sender: "You" || messageObj.sender.trim(),
         timestamp: new Date().toISOString(),
       },
     ]);
@@ -85,7 +85,7 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
       </header>
       <div className="messages">
         {/* Render the sender's initial message */}
-        {selectedMessage.sender !== "You" && (
+        {(selectedMessage.sender !== "You" || selectedMessage.sender !== selectedMessage.receiver) && (
           <div className="message original-message">
             <p>{selectedMessage.message}</p>
             <small>{selectedMessage.timestamp}</small>
@@ -96,10 +96,11 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
           <div
             key={index}
             className={`message ${
-              reply.sender === "You" ? "sent-message" : "reply-message"
+             ( reply.sender === "You" || reply.sender === selectedMessage.receiver) ? "sent-message" : "reply-message"
             }`}
           >
             <p>{reply.message}</p>
+            <small>{reply.sender}</small>
             <small>{new Date(reply.timestamp).toLocaleString()}</small>
           </div>
         ))}

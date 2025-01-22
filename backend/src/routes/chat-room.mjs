@@ -47,7 +47,7 @@ const ChatSpace = (io) => {
           isRead: false,
           isReply: data.isreply || false,
           profileImg: socket.user.profileImg,
-          replies: []
+          //replies: []
         };
         console.log("Message data from the backend:", messageData);
         await Message.create(messageData);
@@ -95,7 +95,8 @@ const ChatSpace = (io) => {
 
     socket.on("fetch_chat_history", async (data) => {
       try {
-        const messages = await Message.getAll();
+        const messages = await Message.getAll(data);
+        console.log("Messages from the backend history version:", messages);
         const filteredMessages = messages.filter(msg => 
           (msg.sender === socket.user.id && msg.receiver === data.otherId) ||
           (msg.sender === data.otherId && msg.receiver === socket.user.id)

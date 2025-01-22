@@ -20,7 +20,7 @@ class Message {
         const connection = await OracleDB.getConnection();
         console.log("Message data from the backend:", messageData);
         const result = await connection.execute(
-            `INSERT INTO message ( room_id, sender, receiver, message, date_sent, time_stamp, isRead, isReply, profileImg) 
+            `INSERT INTO MESSAGE ( room_id, sender, receiver, message, date_sent, time_stamp, isRead, isReply, profileImg) 
              VALUES (:room_id, :sender, :receiver, :message, TO_DATE(:date_sent, 'YYYY-MM-DD'), :time_stamp, :isRead, :isReply, :profileImg)`,
             {
                 room_id: messageData.room_id,
@@ -34,28 +34,30 @@ class Message {
                 profileImg: messageData.profileImg
             }
         );
-        // Get the ID of the newly created message
-        const messageId = result.lastRowid;
-        
-        // Insert replies into the Replies table if any exist
-        if (messageData.replies && messageData.replies.length > 0) {
-            await Promise.all(
-                messageData.replies.map(reply => {
-                    return connection.execute(
-                        `INSERT INTO replies (message_id, sender, receiver, message, date_sent, time_stamp) 
-                         VALUES (:message_id, :sender, :receiver, :message, TO_DATE(:date_sent, 'YYYY-MM-DD'), :time_stamp)`,
-                        {
-                            message_id: messageId,
-                            sender: reply.sender,
-                            receiver: reply.receiver,
-                            message: reply.message,
-                            date: reply.date,
-                            time: reply.time
-                        }
-                    );
-                })
-            );
-        }
+       //// Get the ID of the newly created message
+       //const messageId = result.lastRowid;
+       //
+       //// Insert replies into the Replies table if any exist
+       //if (messageData.replies && messageData.replies.length > 0) {
+       //    await Promise.all(
+       //        messageData.replies.map(reply => {
+       //            return connection.execute(
+       //                `INSERT INTO replies (message_id, sender, receiver, message, date_sent, time_stamp) 
+       //                 VALUES (:message_id, :sender, :receiver, :message, TO_DATE(:date_sent, 'YYYY-MM-DD'), :time_stamp)`,
+       //                {
+       //                    message_id: messageId,
+       //                    sender: reply.sender,
+       //                    receiver: reply.receiver,
+       //                    message: reply.message,
+       //                    date: reply.date,
+       //                    time: reply.time
+       //                }
+       //            );
+       //        })
+       //    );
+       //}
+        console.log("Message sent to database", result,', message data:', messageData);
+        await connection.commit();
 
         return result;
     }
@@ -81,21 +83,45 @@ class Message {
     }
 
     // Get all messages
-    static async getAll() {
-        const connection = await OracleDB.getConnection();
-        const result = await connection.execute(`SELECT * FROM message`);
-        
-        // Attach replies for each message
-        const messages = result.rows;
-        for (let message of messages) {
-            const repliesResult = await connection.execute(
-                `SELECT * FROM replies WHERE message_id = :message_id`,
-                { message_id: message.id }
-            );
-            message.replies = repliesResult.rows;
+    // Get all messages
+static async getAll(room_id) {
+    const connection = await OracleDB.getConnection();
+  
+    try {
+      const result = await connection.execute(
+        `SELECT  room_id, sender, receiver, DBMS_LOB.SUBSTR(message, 4000, 1) AS message, date_sent, time_stamp, isRead, isReply, profileImg 
+         FROM message 
+         WHERE room_id = :room_id`,
+        { room_id }
+      );
+  
+      // Attach replies for each message
+      const messages = result.rows;
+      for (let message of messages) {
+        const repliesResult = await connection.execute(
+          `SELECT  message_id, sender, receiver, DBMS_LOB.SUBSTR(message, 4000, 1) AS message, date_sent, time_stamp 
+           FROM replies 
+           WHERE message_id = :message_id`,
+          { message_id: message.id }
+        );
+        message.replies = repliesResult.rows;
+      }
+  
+      return messages;
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      throw error;
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (closeError) {
+          console.error("Error closing the connection:", closeError);
         }
-        return messages;
+      }
     }
+  }
+  
 
     // Update a message and its replies
     static async update(id, messageData) {

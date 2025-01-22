@@ -18,11 +18,12 @@ class Message {
     // Create a new message in the messages table
     static async create(messageData) {
         const connection = await OracleDB.getConnection();
+        console.log("Message data from the backend:", messageData);
         const result = await connection.execute(
-            `INSERT INTO message ( message_id, sender, receiver, message, date_sent, time_stamp, isRead, isReply, profileImg) 
-             VALUES (:message_id, :sender, :receiver, :message, :date_sent, :time_stamp, :isRead, :isReply, :profileImg)`,
+            `INSERT INTO message ( room_id, sender, receiver, message, date_sent, time_stamp, isRead, isReply, profileImg) 
+             VALUES (:room_id, :sender, :receiver, :message, TO_DATE(:date_sent, 'YYYY-MM-DD'), :time_stamp, :isRead, :isReply, :profileImg)`,
             {
-                message_id: messageData.message_id,
+                room_id: messageData.room_id,
                 sender: messageData.sender,
                 receiver: messageData.receiver,
                 message: messageData.message,
@@ -42,7 +43,7 @@ class Message {
                 messageData.replies.map(reply => {
                     return connection.execute(
                         `INSERT INTO replies (message_id, sender, receiver, message, date_sent, time_stamp) 
-                         VALUES (:message_id, :sender, :receiver, :message, :date_sent, :time_stamp)`,
+                         VALUES (:message_id, :sender, :receiver, :message, TO_DATE(:date_sent, 'YYYY-MM-DD'), :time_stamp)`,
                         {
                             message_id: messageId,
                             sender: reply.sender,

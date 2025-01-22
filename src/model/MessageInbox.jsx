@@ -33,7 +33,7 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
     if (!newReply.trim()) return;
 
     const messageObj = {
-      message_id: selectedMessage.roomId,
+      room_id: selectedMessage.roomId,
       message: newReply,
       sender: selectedMessage.receiver,
       receiver: selectedMessage.sender,

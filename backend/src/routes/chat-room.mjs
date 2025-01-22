@@ -33,7 +33,7 @@ const ChatSpace = (io) => {
         console.log("socket.user from the backend:", socket.user.user.business_Name);
 
         const messageData = {
-          message_id: data.message_id,
+          room_id: data.room_id,
           sender: socket.user.user.business_Name,
           receiver: data.receiver,
           message: data.message,

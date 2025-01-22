@@ -9,6 +9,9 @@
   width: 100vw;
   height: 90vh;
   scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc #f9f9f9;
+  overflow-y: scroll;
   margin: auto;
   
 }
@@ -37,6 +40,8 @@
   border-radius: 8px;
   margin-bottom: 8px;
   max-width: 75%;
+  width: 280px;
+  height: auto;
   word-wrap: break-word;
 }
 

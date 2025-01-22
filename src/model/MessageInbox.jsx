@@ -33,8 +33,14 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
     if (!newReply.trim()) return;
 
     const messageObj = {
-      roomId: selectedMessage.roomId,
+      message_id: selectedMessage.roomId,
       message: newReply,
+      sender: selectedMessage.receiver,
+      receiver: selectedMessage.sender,
+      date_sent: new Date().toISOString().split("T")[0],
+      is_read: true,
+      isreply: false,
+      profileImg: selectedMessage.profileImg,
     };
     socket.emit("send_message", messageObj, (response) => {
       if (response?.error) {
@@ -42,6 +48,7 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
         return;
       }
     });
+    console.log("Message sent:", replies);
 
     // Optimistic UI update
     setReplies((prevReplies) => [

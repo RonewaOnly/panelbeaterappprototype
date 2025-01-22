@@ -19,14 +19,15 @@ class Message {
     static async create(messageData) {
         const connection = await OracleDB.getConnection();
         const result = await connection.execute(
-            `INSERT INTO messages (sender, receiver, message, date, time, isRead, isReply, profileImg) 
-             VALUES (:sender, :receiver, :message, :date, :time, :isRead, :isReply, :profileImg)`,
+            `INSERT INTO message ( message_id, sender, receiver, message, date_sent, time_stamp, isRead, isReply, profileImg) 
+             VALUES (:message_id, :sender, :receiver, :message, :date_sent, :time_stamp, :isRead, :isReply, :profileImg)`,
             {
+                message_id: messageData.message_id,
                 sender: messageData.sender,
                 receiver: messageData.receiver,
                 message: messageData.message,
-                date: messageData.date,
-                time: messageData.time,
+                date_sent: messageData.date_sent.toISOString().split('T')[0],
+                time_stamp: messageData.time_stamp,
                 isRead: messageData.isRead ? 1 : 0,
                 isReply: messageData.isReply ? 1 : 0,
                 profileImg: messageData.profileImg
@@ -62,7 +63,7 @@ class Message {
     static async getById(id) {
         const connection = await OracleDB.getConnection();
         const result = await connection.execute(
-            `SELECT * FROM messages WHERE id = :id`,
+            `SELECT * FROM message WHERE id = :id`,
             { id }
         );
 
@@ -81,7 +82,7 @@ class Message {
     // Get all messages
     static async getAll() {
         const connection = await OracleDB.getConnection();
-        const result = await connection.execute(`SELECT * FROM messages`);
+        const result = await connection.execute(`SELECT * FROM message`);
         
         // Attach replies for each message
         const messages = result.rows;
@@ -99,7 +100,7 @@ class Message {
     static async update(id, messageData) {
         const connection = await OracleDB.getConnection();
         const result = await connection.execute(
-            `UPDATE messages SET sender = :sender, receiver = :receiver, message = :message, date_sent = :date_sent, time_stamp = :time_stamp, isRead = :isRead, isReply = :isReply, profileImg = :profileImg WHERE id = :id`,
+            `UPDATE message SET sender = :sender, receiver = :receiver, message = :message, date_sent = :date_sent, time_stamp = :time_stamp, isRead = :isRead, isReply = :isReply, profileImg = :profileImg WHERE id = :id`,
             {
                 id,
                 sender: messageData.sender,
@@ -153,7 +154,7 @@ class Message {
         );
         // Then delete the message itself
         const result = await connection.execute(
-            `DELETE FROM messages WHERE message_id = :message_id`,
+            `DELETE FROM message WHERE message_id = :message_id`,
             { id }
         );
         return result;

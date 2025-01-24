@@ -1,7 +1,7 @@
 import { createStore, combineReducers } from 'redux';
 import { applyMiddleware } from 'redux';
 import { authReducer } from './reducers/authReducer';
-import {thunk,withExtraArgument} from 'redux-thunk';
+import { thunk } from 'redux-thunk';
 import { fileReducer } from './reducers/fileReducer';
 
 

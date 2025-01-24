@@ -17,6 +17,8 @@ import rateLimit from 'express-rate-limit';
 import { createServer } from "http";
 import { Server } from "socket.io";
 import ChatSpace from "./src/routes/chat-room.mjs";
+import multer from "multer";
+import fs from "fs";
 
 // Define __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -127,6 +129,21 @@ app.use((req, res, next) => {
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadPath = path.join(__dirname, "uploads");
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath); // Create directory if it doesn't exist
+      }
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      cb(null, `${Date.now()}-${file.originalname}`);
+    },
+  });
+  
+  const upload = multer({ storage });
 // JWT configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'development-jwt-secret';
 const JWT_EXPIRES = process.env.JWT_EXPIRATION || '1h';
@@ -247,6 +264,18 @@ app.get('/user/:email', authenticateJWT, async (req, res) => {
         });
     }
 });
+
+// Endpoint to handle file upload
+app.post("/upload", upload.single("file"), (req, res) => {
+    try {
+      console.log("File received:", req.file);
+      res.status(200).json({ message: "File uploaded successfully!", file: req.file });
+    } catch (error) {
+      console.error("Error handling file upload:", error);
+      res.status(500).json({ message: "Error uploading file" });
+    }
+  });
+  
 
 
 // Utility function

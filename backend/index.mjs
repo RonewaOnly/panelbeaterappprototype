@@ -276,6 +276,44 @@ app.post("/upload", upload.single("file"), (req, res) => {
     }
   });
   
+// Endpoint to list all files
+app.get("/files", (req, res) => {
+    fs.readdir("uploads", (err, files) => {
+        if (err) {
+            return res.status(500).json({ error: "Error reading files." });
+        }
+        res.json(files);
+    });
+});
+
+// Endpoint to download a file
+app.get("/files/:filename", (req, res) => {
+    const filePath = path.join(__dirname, "uploads", req.params.filename);
+
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        res.status(404).json({ error: "File not found." });
+    }
+});
+
+// Endpoint to delete a file
+app.delete("/files/:filename", (req, res) => {
+    const filePath = path.join(__dirname, "uploads", req.params.filename);
+
+    if (fs.existsSync(filePath)) {
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                return res.status(500).json({ error: "Error deleting file." });
+            }
+            res.json({ message: "File deleted successfully." });
+        });
+    } else {
+        res.status(404).json({ error: "File not found." });
+    }
+});
+
+
 
 
 // Utility function

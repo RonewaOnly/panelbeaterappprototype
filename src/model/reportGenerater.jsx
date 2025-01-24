@@ -4,8 +4,8 @@ import { generateReportData, calculateCustomerRetention } from "../controller/ge
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { Bar } from 'react-chartjs-2';
-import ChartJS from 'chart.js/auto';
-import html2canvas from 'html2canvas';
+// import ChartJS from 'chart.js/auto';
+// import html2canvas from 'html2canvas';
 
 
 export default function ReportGenerater() {

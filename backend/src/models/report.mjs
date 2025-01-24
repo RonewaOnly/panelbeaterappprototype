@@ -29,7 +29,7 @@ class Report {
     static async update(id, reportData) {
         const connection = await OracleDB.getConnection();
         const sql = `UPDATE reports SET customerId = :customerId, serviceRequest = :serviceRequest, requestDate = :requestDate, 
-                                 status = :status, responseTime = :responseTime, satisfactionRating = :satisfactionRating WHERE id = :id`;
+                                status = :status, responseTime = :responseTime, satisfactionRating = :satisfactionRating WHERE id = :id`;
         const binds = { ...reportData, id };
         await connection.execute(sql, binds, { autoCommit: true });
     }

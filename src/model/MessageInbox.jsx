@@ -59,6 +59,9 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
         timestamp: new Date().toISOString(),
       },
     ]);
+     replies.map((reply, index) => {
+      console.log('index of array: ',index,' \n the replies: ',reply);
+     });
     setNewReply("");
   };
 
@@ -99,11 +102,11 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
              ( reply.sender === "You" || reply.sender === selectedMessage.receiver) ? "sent-message" : "reply-message"
             }`}
           >
-            <p>{reply.message}</p>
-            <small>{reply.sender}</small>
-            <small>{new Date(reply.timestamp).toLocaleString()}</small>
+            <p>{reply[3]}</p>
+            <small>{new Date(reply[4]).toLocaleString()}</small>
           </div>
-        ))}
+        ))
+        }
       </div>
       <div className="new-reply-container">
         <textarea

@@ -3,11 +3,13 @@ import { applyMiddleware } from 'redux';
 import { authReducer } from './reducers/authReducer';
 import { thunk } from 'redux-thunk';
 import { fileReducer } from './reducers/fileReducer';
+import { reportReducer } from './reducers/reportReducer';
 
 
 const rootReducer = combineReducers({
     auth:authReducer,
     files: fileReducer,
+    report: reportReducer,
 
 });
 

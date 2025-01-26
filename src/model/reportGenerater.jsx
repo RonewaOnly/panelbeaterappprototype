@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchReportData, generateCustomerReport, clearError } from '../redux/actions/reportActions';
-import { Bar } from 'react-chartjs-2';
+import { fetchReportDataByRange, generateCustomerReport, clearError } from '../redux/actions/reportActions';
+import { sendFileData } from '../redux/actions/fileActions';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -12,7 +12,7 @@ const ReportGenerator = () => {
 
     useEffect(() => {
         if (dateRange.start && dateRange.end) {
-            dispatch(fetchReportData(dateRange));
+            dispatch(fetchReportDataByRange(dateRange));
         }
     }, [dateRange, dispatch]);
 
@@ -37,7 +37,17 @@ const ReportGenerator = () => {
                 ['Customer Retention Rate (%)', generatedReport.retentionRate],
             ],
         });
-        doc.save('report.pdf');
+
+        // Generate Blob for the PDF
+        const pdfBlob = doc.output('blob');
+        const fileName = `report_${new Date().toISOString()}.pdf`;
+
+        // Save PDF to user's device
+        doc.save(fileName);
+
+        // Send PDF Blob to the server
+        const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+        dispatch(sendFileData(pdfFile));
     };
 
     return (

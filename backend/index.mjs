@@ -18,6 +18,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import ChatSpace from "./src/routes/chat-room.mjs";
 import multer from "multer";
+import sanitize from "sanitize-filename";
 import fs from "fs";
 import { customerInteractions } from "../src/controller/customerDump copy.mjs";
 
@@ -136,16 +137,22 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       const uploadPath = path.join(__dirname, "uploads");
       if (!fs.existsSync(uploadPath)) {
-        fs.mkdirSync(uploadPath); // Create directory if it doesn't exist
+        fs.mkdirSync(uploadPath,{recursive:true}); // Create directory if it doesn't exist
       }
       cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
-      cb(null, `${Date.now()}-${file.originalname}`);
+        const sanitizedFilename = sanitize(file.originalname); // Remove invalid characters
+
+      cb(null, `${Date.now()}-${sanitizedFilename}`);
     },
   });
   
   const upload = multer({ storage });
+
+  const uploadPath = path.join(__dirname, "uploads");
+console.log("Upload path:", uploadPath);
+
 // JWT configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'development-jwt-secret';
 const JWT_EXPIRES = process.env.JWT_EXPIRATION || '1h';
@@ -270,8 +277,20 @@ app.get('/user/:email', authenticateJWT, async (req, res) => {
 // Endpoint to handle file upload
 app.post("/upload", upload.single("file"), (req, res) => {
     try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded." });
+      }
+  
       console.log("File received:", req.file);
-      res.status(200).json({ message: "File uploaded successfully!", file: req.file });
+  
+      res.status(200).json({
+        message: "File uploaded successfully!",
+        file: {
+          originalName: req.file.originalname,
+          savedAs: req.file.filename,
+          location: path.join("uploads", req.file.filename),
+        },
+      });
     } catch (error) {
       console.error("Error handling file upload:", error);
       res.status(500).json({ message: "Error uploading file" });
@@ -334,6 +353,8 @@ app.post('/api/reports', (req, res) => {
 // Generate a customer report
 app.post('/api/generate-report', (req, res) => {
     const { reportData } = req.body;
+
+    console.log('Report data:', reportData);
     if (!reportData || !reportData.length) {
         return res.status(400).json({ error: 'No report data provided' });
     }

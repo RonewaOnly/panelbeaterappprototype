@@ -7,7 +7,8 @@ export const sendFileData = (fileData) => {
             const formData = new FormData();
             formData.append("file", fileData);
 
-            const response = await axios.post("http://localhost:5000/upload", formData);
+            const response = await axios.post("http://localhost:3000/upload", formData);
+            console.log("File upload response:", response.data);
             dispatch({ type: "FILE_UPLOAD_SUCCESS", payload: response.data });
         } catch (error) {
             console.error("Error uploading file:", error);
@@ -20,7 +21,7 @@ export const sendFileData = (fileData) => {
 export const fetchFiles = () => {
     return async (dispatch) => {
         try {
-            const response = await axios.get("http://localhost:5000/files");
+            const response = await axios.get("http://localhost:3000/files");
             dispatch({ type: "FETCH_FILES_SUCCESS", payload: response.data });
         } catch (error) {
             console.error("Error fetching files:", error);
@@ -33,7 +34,7 @@ export const fetchFiles = () => {
 export const deleteFile = (fileName) => {
     return async (dispatch) => {
         try {
-            await axios.delete(`http://localhost:5000/files/${fileName}`);
+            await axios.delete(`http://localhost:3000/files/${fileName}`);
             dispatch({ type: "DELETE_FILE_SUCCESS", payload: fileName });
         } catch (error) {
             console.error("Error deleting file:", error);
@@ -46,7 +47,7 @@ export const deleteFile = (fileName) => {
 export const downloadFile = (fileName) => {
     return async () => {
         try {
-            const response = await axios.get(`http://localhost:5000/files/${fileName}`, {
+            const response = await axios.get(`http://localhost:3000/files/${fileName}`, {
                 responseType: "blob",
             });
 

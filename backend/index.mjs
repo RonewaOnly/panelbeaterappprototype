@@ -19,6 +19,8 @@ import { Server } from "socket.io";
 import ChatSpace from "./src/routes/chat-room.mjs";
 import multer from "multer";
 import fs from "fs";
+import { customerInteractions } from "../src/controller/customerDump";
+
 
 // Define __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -313,6 +315,60 @@ app.delete("/files/:filename", (req, res) => {
     }
 });
 
+
+// Filter customer interactions by date range
+app.post('/api/reports', (req, res) => {
+    const { start, end } = req.body;
+    if (!start || !end) {
+        return res.status(400).json({ error: 'Invalid date range' });
+    }
+
+    const filteredData = customerInteractions.filter(interaction => {
+        const interactionDate = new Date(interaction.requestDate);
+        return interactionDate >= new Date(start) && interactionDate <= new Date(end);
+    });
+
+    res.json(filteredData);
+});
+
+// Generate a customer report
+app.post('/api/generate-report', (req, res) => {
+    const { reportData } = req.body;
+    if (!reportData || !reportData.length) {
+        return res.status(400).json({ error: 'No report data provided' });
+    }
+
+    const totalRequests = reportData.length;
+    const completedRequests = reportData.filter(r => r.status === 'completed').length;
+    const averageResponseTime = (
+        reportData.reduce((acc, curr) => acc + curr.responseTime, 0) / totalRequests
+    ).toFixed(2);
+
+    const retentionRate = ((completedRequests / totalRequests) * 100).toFixed(2);
+
+    const servicesCategorized = reportData.reduce((acc, curr) => {
+        if (!acc[curr.service]) {
+            acc[curr.service] = { count: 0, totalSatisfaction: 0 };
+        }
+        acc[curr.service].count += 1;
+        acc[curr.service].totalSatisfaction += curr.satisfaction;
+        return acc;
+    }, {});
+
+    for (const service in servicesCategorized) {
+        servicesCategorized[service].averageSatisfaction = (
+            servicesCategorized[service].totalSatisfaction / servicesCategorized[service].count
+        ).toFixed(2);
+    }
+
+    res.json({
+        totalRequests,
+        completedRequests,
+        averageResponseTime,
+        retentionRate,
+        servicesCategorized,
+    });
+});
 
 
 

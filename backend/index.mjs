@@ -19,7 +19,7 @@ import { Server } from "socket.io";
 import ChatSpace from "./src/routes/chat-room.mjs";
 import multer from "multer";
 import fs from "fs";
-import { customerInteractions } from "../src/controller/customerDump";
+import { customerInteractions } from "../src/controller/customerDump copy.mjs";
 
 
 // Define __dirname for ES modules

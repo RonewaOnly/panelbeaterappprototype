@@ -1,0 +1,58 @@
+[
+    {
+      "CUSTOMER_ID": 1,
+      "CUSTOMER_NAME": "John Doe",
+      "CUSTOMER_ADDRESS": "123 Main St, Los Angeles, CA",
+      "CUSTOMER_PHONE": "123-456-7890",
+      "CAR_MODEL": "Toyota Camry",
+      "CAR_YEAR": 2020,
+      "CAR_COLOR": "Blue",
+      "CAR_PROBLEM_DESCRIPTION": "Engine overheating",
+      "CAR_REPAIR_STATUS": "NOT VIEWED"
+    },
+    {
+      "CUSTOMER_ID": 2,
+      "CUSTOMER_NAME": "Jane Smith",
+      "CUSTOMER_ADDRESS": "456 Elm St, New York, NY",
+      "CUSTOMER_PHONE": "987-654-3210",
+      "CAR_MODEL": "Honda Accord",
+      "CAR_YEAR": 2018,
+      "CAR_COLOR": "Black",
+      "CAR_PROBLEM_DESCRIPTION": "Brake failure",
+      "CAR_REPAIR_STATUS": "IN PROGRESS"
+    },
+    {
+      "CUSTOMER_ID": 3,
+      "CUSTOMER_NAME": "Michael Johnson",
+      "CUSTOMER_ADDRESS": "789 Pine St, Chicago, IL",
+      "CUSTOMER_PHONE": "555-123-4567",
+      "CAR_MODEL": "Ford Focus",
+      "CAR_YEAR": 2019,
+      "CAR_COLOR": "Red",
+      "CAR_PROBLEM_DESCRIPTION": "Transmission issue",
+      "CAR_REPAIR_STATUS": "COMPLETED"
+    },
+    {
+      "CUSTOMER_ID": 4,
+      "CUSTOMER_NAME": "Emily Davis",
+      "CUSTOMER_ADDRESS": "321 Oak St, Houston, TX",
+      "CUSTOMER_PHONE": "444-789-1234",
+      "CAR_MODEL": "Chevrolet Malibu",
+      "CAR_YEAR": 2021,
+      "CAR_COLOR": "White",
+      "CAR_PROBLEM_DESCRIPTION": "Battery draining quickly",
+      "CAR_REPAIR_STATUS": "NOT VIEWED"
+    },
+    {
+      "CUSTOMER_ID": 5,
+      "CUSTOMER_NAME": "Robert Brown",
+      "CUSTOMER_ADDRESS": "654 Birch St, Miami, FL",
+      "CUSTOMER_PHONE": "333-456-7890",
+      "CAR_MODEL": "Nissan Altima",
+      "CAR_YEAR": 2017,
+      "CAR_COLOR": "Silver",
+      "CAR_PROBLEM_DESCRIPTION": "Air conditioning not working",
+      "CAR_REPAIR_STATUS": "IN PROGRESS"
+    }
+  ]
+  

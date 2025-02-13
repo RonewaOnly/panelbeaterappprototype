@@ -273,6 +273,7 @@ app.get('/user/:email', authenticateJWT, async (req, res) => {
         });
     }
 });
+app.use('/customers', require('./src/routes/customer-route.mjs'));
 
 // Endpoint to handle file upload
 app.post("/upload", upload.single("file"), (req, res) => {

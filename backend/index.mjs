@@ -20,6 +20,8 @@ import ChatSpace from "./src/routes/chat-room.mjs";
 import multer from "multer";
 import sanitize from "sanitize-filename";
 import fs from "fs";
+import CustomerRoute from "./src/routes/customer-route.mjs";
+
 import { customerInteractions } from "../src/controller/customerDump copy.mjs";
 
 
@@ -273,7 +275,7 @@ app.get('/user/:email', authenticateJWT, async (req, res) => {
         });
     }
 });
-app.use('/customers', require('./src/routes/customer-route.mjs'));
+app.use('/customers',CustomerRoute);
 
 // Endpoint to handle file upload
 app.post("/upload", upload.single("file"), (req, res) => {

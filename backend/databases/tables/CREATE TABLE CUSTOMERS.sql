@@ -9,4 +9,4 @@ CREATE TABLE CUSTOMERS(
     CAR_PROBLEM_DESCRIPTION VARCHAR(255) NOT NULL,
     CAR_REPAIR_STATUS VARCHAR(255)  DEFAULT 'NOT VIEWED' NOT NULL 
 );
---when working with default values, it is important to note that the default value is only applied to new rows that are added to the table. It does not affect existing rows. And also that the 'Not Null' must be after the default value.
+--when working with default values, it is important to note that the default value is only applied to new rows that are added to the table. It does not affect existing rows. And also that the 'Not Null' must be after the default value

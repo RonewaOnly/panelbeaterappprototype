@@ -15,24 +15,29 @@ class Customer {
 
     }
     //this save function is not in use on the panel owner side this will be for testing only
-    async save() {
+    async save(cusData) {
         let connection;
+        console.log('From the customer model: '+cusData.CAR_COLOR);
+
         try {
-            connection = await initialize();
+            connection = await OracleDB.getConnection();
             const result = await connection.execute(
-                `INSERT INTO CUSTOMERS (CUSTOMER_NAME, CUSTOMER_ADDRESS, CUSTOMER_PHONE, CAR_MODEL, CAR_YEAR, CAR_COLOR, CAR_PROBLEM_DESCRIPTION, CAR_REPAIR_STATUS) VALUES (:CUSTOMER_NAME, :CUSTOMER_ADDRESS, :CUSTOMER_PHONE, :CAR_MODEL, :CAR_YEAR, :CAR_COLOR, :CAR_PROBLEM_DESCRIPTION, :CAR_REPAIR_STATUS)`,
+                `INSERT INTO CUSTOMERS (CUSTOMER_NAME, CUSTOMER_ADDRESS, CUSTOMER_PHONE, CAR_MODEL, CAR_YEAR, CAR_COLOR, CAR_PROBLEM_DESCRIPTION, CAR_REPAIR_STATUS) 
+                VALUES (:CUSTOMER_NAME, :CUSTOMER_ADDRESS, :CUSTOMER_PHONE, :CAR_MODEL, :CAR_YEAR, :CAR_COLOR, :CAR_PROBLEM_DESCRIPTION, :CAR_REPAIR_STATUS)`,
                 {
-                    CUSTOMER_NAME: this.CUSTOMER_NAME,
-                    CUSTOMER_ADDRESS: this.CUSTOMER_ADDRESS,
-                    CUSTOMER_PHONE: this.CUSTOMER_PHONE,
-                    CAR_MODEL: this.CAR_MODEL,
-                    CAR_YEAR: this.CAR_YEAR,
-                    CAR_COLOR: this.CAR_COLOR,
-                    CAR_PROBLEM_DESCRIPTION: this.CAR_PROBLEM_DESCRIPTION,
-                    CAR_REPAIR_STATUS: this.CAR_REPAIR_STATUS
-                },
-                { autoCommit: true }
+                    CUSTOMER_NAME: cusData.CUSTOMER_NAME,
+                    CUSTOMER_ADDRESS: cusData.CUSTOMER_ADDRESS,
+                    CUSTOMER_PHONE: cusData.CUSTOMER_PHONE,
+                    CAR_MODEL: cusData.CAR_MODEL,
+                    CAR_YEAR: cusData.CAR_YEAR,
+                    CAR_COLOR: cusData.CAR_COLOR,
+                    CAR_PROBLEM_DESCRIPTION: cusData.CAR_PROBLEM_DESCRIPTION,
+                    CAR_REPAIR_STATUS: cusData.CAR_REPAIR_STATUS
+                }
+                
             );
+            await connection.commit();
+            console.log('Customer saved successfully');
             return result;
         } catch (err) {
             console.error(err);
@@ -47,7 +52,7 @@ class Customer {
     async getCustomerDetails() {
         let connection;
         try {
-            connection = await initialize();
+            connection = await OracleDB.getConnection();
             const result = await connection.execute(
                 `SELECT * FROM CUSTOMERS`
             );
@@ -65,7 +70,7 @@ class Customer {
     async getCustomerDetailsById(id) {
         let connection;
         try {
-            connection = await initialize();
+            connection = await OracleDB.getConnection();
             const result = await connection.execute(
                 `SELECT * FROM CUSTOMERS WHERE CUSTOMER_ID = :id`,
                 {
@@ -86,7 +91,7 @@ class Customer {
     async updateCustomerCarRepairStatus(id, status) {
         let connection;
         try {
-            connection = await initialize();
+            connection = await OracleDB.getConnection();
             const result = await connection.execute(
                 `UPDATE CUSTOMERS SET CAR_REPAIR_STATUS = :status WHERE CUSTOMER_ID = :id
                 `,

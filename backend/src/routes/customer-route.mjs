@@ -6,8 +6,9 @@ const router = express.Router();
 // Route to add a new customer
 router.post('/', async (req, res) => {
     try {
+        console.log(req.body);
         const customer = new Customer(req.body);
-        await customer.save();
+        await customer.save(req.body);
         res.status(201).send(customer);
         } catch (err) {
             res.status(400).send(err.message);

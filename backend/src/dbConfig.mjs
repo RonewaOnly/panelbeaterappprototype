@@ -17,6 +17,7 @@ const dbConfig = {
     connectString: connectString,
     // Specify SYSDBA or SYSOPER role
     connectionRole: OracleDB.SYSDBA,
+    poolAlias: 'default',  // Important: This must match the alias in the error message
     poolMin: 2,
     poolMax: 10,
     poolIncrement: 2,

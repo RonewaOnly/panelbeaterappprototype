@@ -11,11 +11,10 @@ function App() {
         <FileProvider>
           <CustomerProvider>
             <MainScreen />
-
           </CustomerProvider>
         </FileProvider>
       </AuthProvider>
-    </div>
+    </div> 
   );
 }
 

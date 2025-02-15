@@ -1,49 +1,57 @@
-import { useState } from 'react';
-import './style.css';
-import { Link } from 'react-router-dom';
-import { login } from '../redux/actions/authActions';
-import { useAuth } from '../redux/reducers/authReducer';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { login } from "../redux/actions/authActions";
+import { useAuth } from "../redux/reducers/authReducer";
+import "./style.css";
 
 export default function Login({ action }) {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const { state, dispatch } = useAuth(); // Access auth state and dispatch from context
 
-    const handleLogin =  () => {
+    // Check authentication state change
+    useEffect(() => {
+        if (state.isAuthenticated) {
+            action(); // Call the action prop if authenticated
+        }
+    }, [state.isAuthenticated, action]);
+
+    // Update error message when state.error changes
+    useEffect(() => {
+        if (state.error) {
+            setError(state.error.message || "Login failed. Please try again.");
+        }
+    }, [state.error]);
+
+    const handleLogin = async () => {
+        setError(""); // Clear previous error
         if (!username || !password) {
-            setError('Username/Email and Password are required.');
+            setError("Username/Email and Password are required.");
             return;
         }
-        //console.log('function to handle the server login: '+login(username, password)(dispatch))
+
+        setLoading(true);
         try {
-            // Dispatch the login action
-            login(username, password)(dispatch)
-            //console.log(state)
-            // Check for authentication status
-            if (state.isAuthenticated) {
-                console.log('Logged in:', state.isAuthenticated);
-                action(); // Call the action prop
-            } else if (state.error) {
-                setError(state.error.message || 'Login failed. Please try again.');
-                console.log('Error:', state.error.message);
-            }
+            await login(username, password)(dispatch);
         } catch (err) {
-            console.error('Login error:', err);
-            setError('An unexpected error occurred. Please try again later.');
+            setError("An unexpected error occurred. Please try again.");
+            console.error("Login error:", err);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="container">
-            <form>
+            <form onSubmit={(e) => e.preventDefault()}>
                 <label>
                     Enter username/email:
                     <input
                         type="text"
-                        id="value"
-                        name="value"
+                        name="username"
                         placeholder="Enter username/email"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
@@ -55,9 +63,8 @@ export default function Login({ action }) {
                     Enter password:
                     <input
                         type="password"
-                        id="password"
                         name="password"
-                        placeholder="Enter password e.g. 12345"
+                        placeholder="Enter password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
@@ -70,8 +77,9 @@ export default function Login({ action }) {
                     type="button"
                     className="btn"
                     onClick={handleLogin}
+                    disabled={loading}
                 >
-                    Login
+                    {loading ? "Logging in..." : "Login"}
                 </button>
             </form>
             <hr />

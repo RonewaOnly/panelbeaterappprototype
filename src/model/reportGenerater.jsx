@@ -9,6 +9,7 @@ const ReportGenerator = () => {
     const dispatch = useDispatch();
     const { report, generatedReport, error } = useSelector((state) => state.report);
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    console.log("Customers state dubugging:", generatedReport);  // Debugging
 
     useEffect(() => {
         if (dateRange.start && dateRange.end) {

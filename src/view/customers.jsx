@@ -1,30 +1,35 @@
 import { useState, useEffect } from "react";
-import { useCustomerContext } from "../redux/reducers/customerReducer";
-import { 
-  fetchAllCustomers, 
-  fetchCustomerById, 
-  removeCustomer, 
-  updateCustomerStatus 
+// import { customerReducer, useCustomerContext } from "../redux/reducers/customerReducer";
+import {
+    fetchAllCustomers,
+    fetchCustomerById,
+    removeCustomer,
+    updateCustomerStatus
 } from "../redux/actions/customerActions";
 import './style.css';
+import { useSelector, useDispatch } from "react-redux";
 
 export default function Customers() {
-    const { state, dispatch } = useCustomerContext(); // Access context state and dispatch
-    const { customers, error } = state; // Get customers and error from state
-    
+    const dispatch = useDispatch();
+    const customers = useSelector((state) =>
+        state.customers.customers
+    ); // Get customers and error from state
+    const error = useSelector((state) => state.error); // Get error from state
+    console.log("Customers state dubugging:", customers);  // Debugging
+
+
     const [action, setAction] = useState({
         clicked: false,
         id: null,
         colNumber: null,
     });
 
-    useEffect(() => {
-        dispatch(fetchAllCustomers()); // Dispatch to fetch customers
-    }, [dispatch]);
+    console.log("Dispatching fetchAllCustomers");
+    dispatch(fetchAllCustomers()); // Dispatch to fetch customers
 
-    const handleRowClick = (customerId, colIndex) => {
+    const handleRowClick = (customerId) => {
+        setAction({ clicked: true, id: customerId });
         dispatch(fetchCustomerById(customerId)); // Dispatch to fetch details of the clicked customer
-        setAction({ clicked: true, id: customerId, colNumber: colIndex });
     };
 
     const handleRemoveCustomer = async (customerId) => {
@@ -33,14 +38,13 @@ export default function Customers() {
     };
 
     const handleUpdateStatus = async (customerId, status) => {
-        dispatch(updateCustomerStatus(customerId, status)); // Dispatch to update customer status
+         dispatch(updateCustomerStatus(customerId, status)); // Dispatch to update customer status
     };
 
     if (error) {
         return <div className="error-message">Error: {error}</div>;
     }
 
-    console.log('Customers:', customers);
 
     return (
         <div className="customers-container">
@@ -49,11 +53,12 @@ export default function Customers() {
                     id={action.id}
                     customers={customers}
                     colNum={action.colNumber}
-                    onConfirm={() => handleUpdateStatus(action.id, "confirmed")}
-                    onFixed={() => handleUpdateStatus(action.id, "fixed")}
+                    onConfirm={() => handleUpdateStatus(action.id, "VIEWED")}
+                    onFixed={() => handleUpdateStatus(action.id, "COMPLETED")}
                     onRemove={handleRemoveCustomer}
                     onViewDetails={(customer) => {
-                        dispatch(fetchCustomerById(customer.id)); // Dispatch to view customer details
+                        dispatch(fetchCustomerById(customer)); // Dispatch to view customer details
+                        alert(customer)
                     }}
                 />
             ) : (
@@ -61,28 +66,27 @@ export default function Customers() {
                     <thead>
                         <tr>
                             <th>Customer ID</th>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Address</th>
+                            <th>Full Name</th>
+                            <th>Cell Number</th>
                             <th>Problem</th>
-                            <th>Type</th>
+                            <th>Model</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {customers.map((customer) => (
+                        {customers.map((customer,index) => (
+                            console.log('this attriubate of the map function',index),
                             <tr
-                                key={customer.id}
-                                className={`customer-row ${customer.status || ''}`}
-                                onClick={() => handleRowClick(customer.id, 0)} // Assuming colIndex is 0 here
+                                key={index}
+                                className={`customer-row ${customer[8] || ''}`}
+                                onClick={() => handleRowClick(customer[0])} 
                             >
-                                <td>{customer.id}</td>
-                                <td>{customer.firstname}</td>
-                                <td>{customer.lastname}</td>
-                                <td>{customer.address}</td>
-                                <td>{customer.problem}</td>
-                                <td>{customer.typeOfCar}</td>
-                                <td>{customer.status || 'pending'}</td>
+                                <td>{customer[0]}</td>
+                                <td>{customer[1]}</td>
+                                <td>{customer[3]}</td>
+                                <td>{customer[7]}</td>
+                                <td>{customer[5]}</td>
+                                <td>{customer[8] || 'pending'}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -93,26 +97,29 @@ export default function Customers() {
 }
 
 export function PopSelection({ id, customers, colNum, onConfirm, onFixed, onRemove, onViewDetails }) {
-    const customerIndex = customers.findIndex((customer) => customer.id === id);
+    const customerIndex = customers.findIndex((customer) => customer[0] === id);
+    console.log('array in pop up',customerIndex)
+
 
     if (customerIndex >= 0) {
         const selectedCustomer = customers[customerIndex];
+        console.log('found user: ',selectedCustomer)
 
         return (
             <div className="pop-selection">
                 <h3>Customer Details</h3>
-                <p>Customer ID: {selectedCustomer.id}</p>
-                <p>Name: {selectedCustomer.firstname} {selectedCustomer.lastname}</p>
-                <p>Address: {selectedCustomer.address}</p>
-                <p>Problem: {selectedCustomer.problem}</p>
-                <p>Type of Car: {selectedCustomer.typeOfCar}</p>
-                <p>Status: {selectedCustomer.status || 'pending'}</p>
+                <p>Customer ID: {selectedCustomer[0]}</p>
+                <p>FullName: {selectedCustomer[1]}</p>
+                <p>Address: {selectedCustomer[2]}</p>
+                <p>Cell Number: {selectedCustomer[3]}</p>
+                <p>Car Model: {selectedCustomer[4]}</p>
+                <p>Status: {selectedCustomer[8] || 'pending'}</p>
                 <p>Column Number: {colNum}</p>
 
                 <div className="action-buttons">
                     <button onClick={onConfirm}>Confirm</button>
                     <button onClick={onFixed}>Mark as Fixed</button>
-                    <button onClick={() => onRemove(selectedCustomer.id)}>Remove</button>
+                    <button onClick={() => onRemove(selectedCustomer[0])}>Remove</button>
                     <button onClick={() => onViewDetails(selectedCustomer)}>View Details</button>
                 </div>
             </div>

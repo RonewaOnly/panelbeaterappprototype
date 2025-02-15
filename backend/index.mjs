@@ -34,7 +34,7 @@ const server = createServer(app);
 const io = new Server(server, {
     cors: {
         origin: "http://localhost:3001",
-        methods: ["GET", "POST"],
+        methods: ["GET", "POST","PUT","DELETE","PATCH"],
         credentials: true,
       },
 });
@@ -158,6 +158,9 @@ console.log("Upload path:", uploadPath);
 // JWT configuration
 const JWT_SECRET = process.env.JWT_SECRET || 'development-jwt-secret';
 const JWT_EXPIRES = process.env.JWT_EXPIRATION || '1h';
+const REFRESH_SECRET = process.env.JWT_REFRESH || 'development-refresh-secret';
+const REFRESH_EXPIRES = process.env.REFRESH_EXPIRATION || '7d';
+
 
 // Authentication middleware
 const authenticateJWT = (req, res, next) => {
@@ -181,33 +184,53 @@ const authenticateJWT = (req, res, next) => {
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });
-app.post('/login', (req, res, next) => {
-    console.log('Headers:', req.headers);
-    console.log('Content-Type:', req.headers['content-type']);
-        next()},
-    passport.authenticate("local", { failureFlash: true }), // authenticate first
-    (req, res) => {
-        const session = req.session.passport;
-        console.log(`session- ${session}`);
-        try {
-            const user = req.session.passport.user;
-            //store the session in a token
-            console.error('User:', user);
-            const token = jwt.sign(
-                session,
-                JWT_SECRET,
-                { expiresIn: JWT_EXPIRES }
-            )
-            req.session.token = token;
-            console.log('Token after login:', token); // Debugging the token
-            res.json({ message: 'Login successful', token,session });
-            //res.redirect(reactAppURL + '/');
-        } catch (error) {
-            console.error('Login error:', error);
-            res.status(500).json({ message: 'Login failed' });
-        }
+
+// Mock storage for refresh tokens (use a database in production)
+let refreshTokens = [];
+
+app.post('/login', passport.authenticate("local", { failureFlash: true }), (req, res) => {
+    try {
+        const user = req.session.passport.user;
+        console.log('User:', user);
+
+        // Generate access & refresh tokens
+        const accessToken = jwt.sign({ user }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+        const refreshToken = jwt.sign({ user }, REFRESH_SECRET, { expiresIn: REFRESH_EXPIRES });
+
+        // Store refresh token securely (e.g., in a database)
+        refreshTokens.push(refreshToken);
+
+        req.session.token = accessToken; // Store access token in session
+        console.log('Access Token:', accessToken);
+        console.log('Refresh Token:', refreshToken);
+
+        res.json({ message: 'Login successful', accessToken, refreshToken, session: req.session.passport });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ message: 'Login failed' });
     }
-);
+});
+
+app.post('/refresh', (req, res) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return res.status(401).json({ message: 'Refresh token required' });
+    }
+
+    if (!refreshTokens.includes(refreshToken)) {
+        return res.status(403).json({ message: 'Invalid refresh token' });
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, REFRESH_SECRET);
+        const newAccessToken = jwt.sign({ user: decoded.user }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+
+        res.json({ accessToken: newAccessToken });
+    } catch (err) {
+        return res.status(403).json({ message: 'Invalid or expired refresh token' });
+    }
+});
 
 // app.get('/login', (req, res) => {
 //     res.redirect(reactAppURL + '/login');
@@ -231,6 +254,13 @@ app.post('/register', async (req, res) => {
             error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
         });
     }
+});
+
+
+app.post('/logout', (req, res) => {
+    const { refreshToken } = req.body;
+    refreshTokens = refreshTokens.filter(token => token !== refreshToken);
+    res.json({ message: 'Logged out successfully' });
 });
 
 // Protected routes

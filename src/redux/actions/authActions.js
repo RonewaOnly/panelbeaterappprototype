@@ -1,40 +1,65 @@
 import axios from 'axios';
 
-export const LOGIN_SUCCESS = "LOGIN SUCCESS";
-export const LOGIN_FAILED = "LOGIN FAILED";
-export const LOGOUT_SUCCESS = "LOGOUT SUCCESS";
+export const LOGIN_SUCCESS = "LOGIN_SUCCESS";
+export const LOGIN_FAILED = "LOGIN_FAILED";
+export const LOGOUT_SUCCESS = "LOGOUT_SUCCESS";
+export const REFRESH_SUCCESS = "REFRESH_SUCCESS";
+export const REFRESH_FAILED = "REFRESH_FAILED";
 
 // Action function for logging in a user
 export const login = (email, password) => {
-    return (dispatch) => {
-        // Make a POST request to authenticate the user
-        axios.post('http://localhost:3000/login/', {
-            email,
-            password
-        })
-        .then(response => {
-            // If the user is authenticated, save the token in localStorage
-            localStorage.setItem('token', response.data.token);
+    return async (dispatch) => {
+        try {
+            const response = await axios.post('http://localhost:3000/login/', {
+                email,
+                password
+            });
 
-            // Dispatch the success action to update the app state
+            // Save both access & refresh tokens
+            localStorage.setItem("accessToken", response.data.accessToken);
+            localStorage.setItem("refreshToken", response.data.refreshToken);
+
             dispatch({ type: LOGIN_SUCCESS, payload: response.data });
             console.log('Login successful: ', response.data);
-        })
-        .catch(error => {
-            // If authentication fails, dispatch the failure action
+        } catch (error) {
             dispatch({ type: LOGIN_FAILED, payload: error });
             console.log('Login failed: ', error);
-        });
+        }
     };
 };
 
 // Logout function
 export const logout = () => {
     return (dispatch) => {
-        // Remove the token from localStorage
-        localStorage.removeItem('token');
-
-        // Dispatch the logout success action to update the state
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
         dispatch({ type: LOGOUT_SUCCESS });
+    };
+};
+
+export const refreshToken = () => {
+    return async (dispatch) => {
+        const refreshToken = localStorage.getItem("refreshToken");
+
+        if (!refreshToken) {
+            dispatch(logout());
+            return;
+        }
+
+        try {
+            const response = await axios.post("http://localhost:3000/refresh", { refreshToken });
+
+            // Store new tokens
+            localStorage.setItem("accessToken", response.data.accessToken);
+            dispatch({ type: REFRESH_SUCCESS, payload: response.data });
+
+            console.log("Token refreshed:", response.data);
+            return response.data.accessToken;
+        } catch (error) {
+            dispatch({ type: REFRESH_FAILED });
+            console.error("Token refresh failed:", error);
+            dispatch(logout());
+            return null;
+        }
     };
 };

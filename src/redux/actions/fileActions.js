@@ -14,7 +14,7 @@ export const sendFileData = (fileData) => {
             console.error("Error uploading file:", error);
             dispatch({ type: "FILE_UPLOAD_FAILURE", error: error.message });
         }
-    };
+    }; 
 };
 
 // Action to fetch files from the API

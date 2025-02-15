@@ -42,14 +42,14 @@ class Customer {
         } catch (err) {
             console.error(err);
         } finally {
-            if (connection) {
-                await close(connection);
-            }
+            // if (connection) {
+                // await close(connection);
+            // }
         }
     }
 
     //get the customers details
-    async getCustomerDetails() {
+    static async getCustomerDetails() {
         let connection;
         try {
             connection = await OracleDB.getConnection();
@@ -60,14 +60,14 @@ class Customer {
         } catch (err) {
             console.error(err);
         } finally {
-            if (connection) {
-                await close(connection);
-            }
+            // if (connection) {
+            //     await close(connection);
+            // }
         }
     }
 
     //get the customers details by id
-    async getCustomerDetailsById(id) {
+    static async getCustomerDetailsById(id) {
         let connection;
         try {
             connection = await OracleDB.getConnection();
@@ -77,13 +77,14 @@ class Customer {
                     id
                 }
             );
+            console.log('what is the resulting action: ',result.rows);
             return result.rows;
         } catch (err) {
             console.error(err);
         } finally {
-            if (connection) {
-                await close(connection);
-            }
+            // if (connection) {
+            //     await close(connection);
+            // }
         }
     }
 
@@ -105,9 +106,9 @@ class Customer {
         } catch (err) {
             console.error(err);
         } finally {
-            if (connection) {
-                await close(connection);
-            }
+            // if (connection) {
+            //     await close(connection);
+            // }
         }
     }
 }

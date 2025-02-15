@@ -276,7 +276,6 @@ app.get('/user/:email', authenticateJWT, async (req, res) => {
     }
 });
 app.use('/customers',CustomerRoute);//this is the route to use for the customer details
-
 // Endpoint to handle file upload
 app.post("/upload", upload.single("file"), (req, res) => {
     try {

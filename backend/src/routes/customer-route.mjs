@@ -39,14 +39,30 @@ router.get('/customers-list/:id', async (req, res) => {
 
 
 // Route to update customer's car repair status by id
-router.put('/customers-list/:id/status', async (req, res) => {
+router.put('/customer-list/:id/:status', async (req, res) => {
+    const customerId = req.params.id;
+    const status = req.params.status;  // Getting status from the URL
+
+    console.log(`Updating customer ${customerId} to status: ${status}`);
+
+    console.log('the object values:', req.params);
+    // Check if status is missing
+    if (!status) {
+        return res.status(400).json({ error: "Status is required" });
+    }
+
+
     try {
-        const { status } = req.body;
-        const customer = new Customer();
-        const result = await customer.updateCustomerCarRepairStatus(req.params.id, status);
-        res.json(result);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+        const result = await Customer.updateCustomerCarRepairStatus(customerId, status);
+        
+        if (result.rowsAffected === 0) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+        
+        res.status(200).json({ message: 'Customer status updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -80,6 +96,30 @@ router.get('/customers-list', async (req, res) => {
         }
     }
 });
+
+//router to detele the customer by id
+router.delete('/delete-customer/:id', async (req, res) => {
+    const customerId = req.params.id;
+    console.log('Deleting customer with ID:', customerId);
+    try {
+        const result = await Customer.removeCustomerById(customerId);
+        if (result.rowsAffected === 0) {
+            console.log('Customer not found');
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+
+        console.log('Customer deleted successfully the rsult:', result);
+        res.status(200).json({ message: 'Customer deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+router.get('/customers-lists/test', (req, res) => {
+    res.send('Route is working!');
+});
+
 
 
 export default router;

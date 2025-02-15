@@ -17,7 +17,7 @@ class Customer {
     //this save function is not in use on the panel owner side this will be for testing only
     async save(cusData) {
         let connection;
-        console.log('From the customer model: '+cusData.CAR_COLOR);
+        console.log('From the customer model: ' + cusData.CAR_COLOR);
 
         try {
             connection = await OracleDB.getConnection();
@@ -34,7 +34,7 @@ class Customer {
                     CAR_PROBLEM_DESCRIPTION: cusData.CAR_PROBLEM_DESCRIPTION,
                     CAR_REPAIR_STATUS: cusData.CAR_REPAIR_STATUS
                 }
-                
+
             );
             await connection.commit();
             console.log('Customer saved successfully');
@@ -43,7 +43,7 @@ class Customer {
             console.error(err);
         } finally {
             // if (connection) {
-                // await close(connection);
+            // await close(connection);
             // }
         }
     }
@@ -77,7 +77,7 @@ class Customer {
                     id
                 }
             );
-            console.log('what is the resulting action: ',result.rows);
+            console.log('what is the resulting action: ', result.rows);
             return result.rows;
         } catch (err) {
             console.error(err);
@@ -89,7 +89,7 @@ class Customer {
     }
 
     //update the customer's CAR_REPAIR_STATUS by id and status
-    async updateCustomerCarRepairStatus(id, status) {
+    static async updateCustomerCarRepairStatus(id, status) {
         let connection;
         try {
             connection = await OracleDB.getConnection();
@@ -101,6 +101,26 @@ class Customer {
                     status
                 },
                 { autoCommit: true }
+            );
+            return result;
+        } catch (err) {
+            console.error(err);
+        } finally {
+            // if (connection) {
+            //     await close(connection);
+            // }
+        }
+    }
+    //remove the customer by id
+    static async removeCustomerById(id) {
+        let connection;
+        try {
+            connection = await OracleDB.getConnection();
+            const result = await connection.execute(
+                `DELETE FROM CUSTOMERS WHERE CUSTOMER_ID = :id`,
+                {
+                    id
+                }
             );
             return result;
         } catch (err) {

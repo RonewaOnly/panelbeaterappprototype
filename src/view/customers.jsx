@@ -1,23 +1,46 @@
-import { useState } from "react";
-import { CUSTOMERS } from "../Customers";
+import { useState, useEffect } from "react";
+import { useCustomerContext } from "../redux/reducers/customerReducer";
+import { 
+  fetchAllCustomers, 
+  fetchCustomerById, 
+  removeCustomer, 
+  updateCustomerStatus 
+} from "../redux/actions/customerActions";
 import './style.css';
 
 export default function Customers() {
-    const [customers, setCustomers] = useState(CUSTOMERS);
+    const { state, dispatch } = useCustomerContext(); // Access context state and dispatch
+    const { customers, error } = state; // Get customers and error from state
+    
     const [action, setAction] = useState({
         clicked: false,
         id: null,
         colNumber: null,
     });
 
+    useEffect(() => {
+        dispatch(fetchAllCustomers()); // Dispatch to fetch customers
+    }, [dispatch]);
+
     const handleRowClick = (customerId, colIndex) => {
+        dispatch(fetchCustomerById(customerId)); // Dispatch to fetch details of the clicked customer
         setAction({ clicked: true, id: customerId, colNumber: colIndex });
     };
 
-    const handleRemoveCustomer = (customerId) => {
-        setCustomers(customers.filter((customer) => customer.id !== customerId));
+    const handleRemoveCustomer = async (customerId) => {
+        dispatch(removeCustomer(customerId)); // Dispatch to remove a customer
         setAction({ clicked: false, id: null, colNumber: null });
     };
+
+    const handleUpdateStatus = async (customerId, status) => {
+        dispatch(updateCustomerStatus(customerId, status)); // Dispatch to update customer status
+    };
+
+    if (error) {
+        return <div className="error-message">Error: {error}</div>;
+    }
+
+    console.log('Customers:', customers);
 
     return (
         <div className="customers-container">
@@ -26,10 +49,12 @@ export default function Customers() {
                     id={action.id}
                     customers={customers}
                     colNum={action.colNumber}
-                    onConfirm={() => alert("Action confirmed!")}
-                    onFixed={() => alert("Marked as Fixed!")}
+                    onConfirm={() => handleUpdateStatus(action.id, "confirmed")}
+                    onFixed={() => handleUpdateStatus(action.id, "fixed")}
                     onRemove={handleRemoveCustomer}
-                    onViewDetails={(details) => alert(JSON.stringify(details, null, 2))}
+                    onViewDetails={(customer) => {
+                        dispatch(fetchCustomerById(customer.id)); // Dispatch to view customer details
+                    }}
                 />
             ) : (
                 <table className="customers-table">
@@ -41,14 +66,15 @@ export default function Customers() {
                             <th>Address</th>
                             <th>Problem</th>
                             <th>Type</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {customers.map((customer, index) => (
+                        {customers.map((customer) => (
                             <tr
                                 key={customer.id}
-                                className="customer-row"
-                                onClick={() => handleRowClick(customer.id, index)}
+                                className={`customer-row ${customer.status || ''}`}
+                                onClick={() => handleRowClick(customer.id, 0)} // Assuming colIndex is 0 here
                             >
                                 <td>{customer.id}</td>
                                 <td>{customer.firstname}</td>
@@ -56,6 +82,7 @@ export default function Customers() {
                                 <td>{customer.address}</td>
                                 <td>{customer.problem}</td>
                                 <td>{customer.typeOfCar}</td>
+                                <td>{customer.status || 'pending'}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -79,6 +106,7 @@ export function PopSelection({ id, customers, colNum, onConfirm, onFixed, onRemo
                 <p>Address: {selectedCustomer.address}</p>
                 <p>Problem: {selectedCustomer.problem}</p>
                 <p>Type of Car: {selectedCustomer.typeOfCar}</p>
+                <p>Status: {selectedCustomer.status || 'pending'}</p>
                 <p>Column Number: {colNum}</p>
 
                 <div className="action-buttons">

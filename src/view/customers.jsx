@@ -6,16 +6,19 @@ import {
     removeCustomer,
     updateCustomerStatus
 } from "../redux/actions/customerActions";
+import { useCustomerContext } from "../redux/reducers/customerReducer";
 import './style.css';
-import { useSelector, useDispatch } from "react-redux";
+//import { useSelector, useDispatch } from "react-redux";
 
 export default function Customers() {
-    const dispatch = useDispatch();
-    const customers = useSelector((state) =>
-        state.customers.customers
-    ); // Get customers and error from state
-    const error = useSelector((state) => state.error); // Get error from state
-    console.log("Customers state dubugging:", customers);  // Debugging
+    // const dispatch = useDispatch();
+    // const customers = useSelector((state) =>
+        // state.customers.customers
+    // ); // Get customers and error from state
+    // const error = useSelector((state) => state.error); // Get error from state
+    // console.log("Customers state dubugging:", customers);  // Debugging
+
+    const [state,dispatch] = useCustomerContext()
 
 
     const [action, setAction] = useState({
@@ -23,10 +26,19 @@ export default function Customers() {
         id: null,
         colNumber: null,
     });
+    console.log('value of state: ', state)
 
-    console.log("Dispatching fetchAllCustomers");
-    dispatch(fetchAllCustomers()); // Dispatch to fetch customers
+    useEffect( () => {
+        try {
+            const response =  dispatch(fetchAllCustomers());   
+            console.log("Customers:", response.data);
+            } catch (error) {
+                console.error("Error fetching customers:", error);
+                }
+    },[state,dispatch]);
 
+    // console.log("Dispatching fetchAllCustomers");
+    // dispatch(fetchAllCustomers()); // Dispatch to fetch customers
     const handleRowClick = (customerId) => {
         setAction({ clicked: true, id: customerId });
         dispatch(fetchCustomerById(customerId)); // Dispatch to fetch details of the clicked customer
@@ -41,8 +53,8 @@ export default function Customers() {
          dispatch(updateCustomerStatus(customerId, status)); // Dispatch to update customer status
     };
 
-    if (error) {
-        return <div className="error-message">Error: {error}</div>;
+    if (state.error) {
+        return <div className="error-message">Error: {state.error}</div>;
     }
 
 
@@ -51,7 +63,7 @@ export default function Customers() {
             {action.clicked ? (
                 <PopSelection
                     id={action.id}
-                    customers={customers}
+                    customers={state.customers}
                     colNum={action.colNumber}
                     onConfirm={() => handleUpdateStatus(action.id, "VIEWED")}
                     onFixed={() => handleUpdateStatus(action.id, "COMPLETED")}
@@ -74,7 +86,7 @@ export default function Customers() {
                         </tr>
                     </thead>
                     <tbody>
-                        {customers.map((customer,index) => (
+                        {state.customers.map((customer,index) => (
                             console.log('this attriubate of the map function',index),
                             <tr
                                 key={index}

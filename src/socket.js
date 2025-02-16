@@ -1,8 +1,10 @@
 import { io } from "socket.io-client";
+import { refreshToken } from "./redux/actions/authActions";
 
 const socket = io("http://localhost:3000", {
   auth: {
-    token: localStorage.getItem("token"), // Replace with your token retrieval logic
+    token: localStorage.getItem("accessToken"),
+    refreshToken: refreshToken(),
   },
   withCredentials: true,
 });

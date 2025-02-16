@@ -66,7 +66,7 @@ const CustomerContext = createContext();
 const CustomerProvider = ({ children }) => {
   const [state, dispatch] = useReducer(customerReducer, initialState);
 
-  const value = { state, dispatch };
+  const value = [state, dispatch ];
 
   return (
     <CustomerContext.Provider value={value}>
@@ -79,11 +79,11 @@ const CustomerProvider = ({ children }) => {
 const useCustomerContext = () => {
   const context = useContext(CustomerContext);
 
-  if (context === null) {
+  if (!context) {
     throw new Error("useCustomerContext must be used within a CustomerProvider");
   }
 
   return context;
 };
 
-export { CustomerProvider, useCustomerContext, CustomerContext, customerReducer };
+export { CustomerProvider, useCustomerContext, customerReducer };

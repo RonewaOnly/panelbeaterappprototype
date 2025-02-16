@@ -13,8 +13,7 @@ export const SET_DETAILS = "DETAILS";
 export const fetchAllCustomers = () => async (dispatch) => {
     try {
         const response = await axios.get("http://localhost:3000/customers/customers-list");
-        console.log("Raw API response:", response);
-
+        //console.log("Raw API response:", response);
         dispatch({ type: SET_VIEW_DETAILS, payload: response.data });
     } catch (error) {
         dispatch({ type: SET_ERROR, payload: error.message });
@@ -44,7 +43,7 @@ export const updateCustomerStatus = (id, status) => async (dispatch) => {
 
 export const removeCustomer = (id) => async (dispatch) => {
     try {
-        const response = await axios.delete(`http://localhost:3000/customers/customers-list/${
+        const response = await axios.delete(`http://localhost:3000/customers/delete-customer/${
             id
         }`);
         dispatch({ type: SET_REMOVE, payload: response.data });

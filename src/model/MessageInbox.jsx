@@ -7,27 +7,32 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
   const [newReply, setNewReply] = useState("");
 
   useEffect(() => {
-    if (selectedMessage) {
-      const { roomId } = selectedMessage;
+    if (!selectedMessage) return;
 
-      // Fetch chat history
-      socket.emit("fetch_chat_history", roomId);
+    const { roomId } = selectedMessage;
 
-      // Listen for chat history and new messages
-      socket.on("chat_history", (history) => setReplies(history || []));
-      socket.on("receive_message", (message) => {
-        if (message.roomId === roomId) {
-          setReplies((prevReplies) => [...prevReplies, message]);
-        }
-      });
+    // Fetch chat history
+    socket.emit("fetch_chat_history", roomId);
 
-      // Cleanup listeners
-      return () => {
-        socket.off("chat_history");
-        socket.off("receive_message");
-      };
-    }
+    // Define handlers
+    const handleChatHistory = (history) => setReplies(history || []);
+    const handleReceiveMessage = (message) => {
+      if (message.roomId === roomId) {
+        setReplies((prevReplies) => [...prevReplies, message]);
+      }
+    };
+
+    // Attach listeners
+    socket.on("chat_history", handleChatHistory);
+    socket.on("receive_message", handleReceiveMessage);
+
+    // Cleanup previous listeners before adding new ones
+    return () => {
+      socket.off("chat_history", handleChatHistory);
+      socket.off("receive_message", handleReceiveMessage);
+    };
   }, [selectedMessage]);
+
 
   const handleSendReply = () => {
     if (!newReply.trim()) return;
@@ -51,17 +56,22 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
     console.log("Message sent:", replies);
 
     // Optimistic UI update
-    setReplies((prevReplies) => [
-      ...prevReplies,
-      {
-        ...messageObj,
-        sender: "You" || messageObj.sender.trim(),
-        timestamp: new Date().toISOString(),
-      },
-    ]);
-     replies.map((reply, index) => {
-      console.log('index of array: ',index,' \n the replies: ',reply);
-     });
+    setReplies((prevReplies) => {
+      const updatedReplies = [
+        ...prevReplies,
+        {
+          ...messageObj,
+          sender: "You" || messageObj.sender.trim(),
+          timestamp: new Date().toISOString(),
+        },
+      ];
+      console.log("Updated Replies:", updatedReplies); 
+      return updatedReplies;
+    });
+    
+    replies.map((reply, index) => {
+      console.log('index of array: ', index, ' \n the replies: ', reply);
+    });
     setNewReply("");
   };
 
@@ -95,18 +105,20 @@ const MessageInbox = ({ selectedMessage, onClose }) => {
           </div>
         )}
 
+
         {replies.map((reply, index) => (
           <div
             key={index}
-            className={`message ${
-             ( reply.sender === "You" || reply.sender === selectedMessage.receiver) ? "sent-message" : "reply-message"
-            }`}
+            className={`message ${(reply.sender === "You" || reply.sender === selectedMessage.receiver)
+                ? "sent-message"
+                : "reply-message"
+              }`}
           >
-            <p>{reply[3]}</p>
-            <small>{new Date(reply[4]).toLocaleString()}</small>
+            <p>{reply[3]}</p> {/* Ensure reply.message is used instead of reply[3] */}
+            <small>{new Date(reply[4]).toLocaleString()}</small> {/* Ensure reply.timestamp is used */}
           </div>
-        ))
-        }
+        ))}
+
       </div>
       <div className="new-reply-container">
         <textarea

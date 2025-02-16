@@ -31,12 +31,13 @@ export default function Customers() {
     };
 
     const handleRemoveCustomer =  (customerId) => {
-         removeCustomer(customerId)(dispatch); // Ensure async completion
+         removeCustomer(customerId)(dispatch); 
         setAction({ clicked: false, id: null, colNumber: null });
     };
 
     const handleUpdateStatus =  (customerId, status) => {
-         updateCustomerStatus(customerId, status)(dispatch); // Ensure async completion
+        console.log(`The ID: ${customerId} , The Status: ${status}`);
+            updateCustomerStatus(customerId, status)(dispatch); 
     };
 
     if (state.error) {

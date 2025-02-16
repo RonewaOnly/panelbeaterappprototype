@@ -120,6 +120,9 @@ router.get('/customers-lists/test', (req, res) => {
     res.send('Route is working!');
 });
 
+console.log(router.stack.map(r => r.route));
+
+
 
 
 export default router;

@@ -29,10 +29,10 @@ export const fetchCustomerById = (id) => async (dispatch) => {
     }
 }
 export const updateCustomerStatus = (id, status) => async (dispatch) => {
+    console.log(`The ID in the action: ${id} , The Status: ${status}`);
+
     try {
-        const response = await axios.put(`http://localhost:3000/customers/customers-list/${id}`, {
-            status
-        });
+        const response = await axios.put(`http://localhost:3000/customers/customer-list/${id}/${status}`);
         console.log('I was called: ',response.request);
         dispatch({ type: SET_UPDATE, payload: response.data });
     }

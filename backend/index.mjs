@@ -66,6 +66,7 @@ app.use(limiter);
 const corsOptions = {
     origin: reactAppURL,
     credentials: true,
+    methods: ["GET", "POST","PUT","DELETE","PATCH"],
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));

@@ -15,40 +15,40 @@ import MessageInbox from '../model/MessageInbox';
 import { useAuth } from '../redux/reducers/authReducer';
 
 export default function MainScreen() {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    //const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [closeMessageInbox, setCloseMessageInbox] = useState(false);
-    const { state } = useAuth();
-
+    const { state, dispatch }  = useAuth();
 
 
     useEffect(() => {
-        // Check local storage for token and set authentication state
-        const token = localStorage.getItem('token');
-        if (token) {
-            setIsAuthenticated(true);
-        }
+        console.log("Auth State:", state);
+    }, [state]);
 
-    }, []);
+
 
     const handleLogin = () => {
-        setIsAuthenticated(true);
-        //check for the state of the user
         if (!state.user) {
-            console.log('User not logged in')
+            console.log('User not logged in');
+        } else {
+            console.log('User logged in ID->', state.user.id);
         }
-        console.log('User logged in ID->', state.user.session.user.id);
     };
 
     const handleLogout = () => {
         //localStorage.removeItem('token'); // Clear token on logout
-        setIsAuthenticated(false);
+        dispatch({ type: "LOGOUT_SUCCESS" }); 
+
     };
 
     const handleSelectMessage = (message) => {
-        const msg = { ...message, roomId: `${state.user.session.user.id}-${message.id}` };
+        if (!state.user) {
+            console.error("User not authenticated!");
+            return;
+        }
+        const msg = { ...message, roomId: `${state.user.id}-${message.id}` };
         setSelectedMessage(msg);
-        console.log("messages:",message);
+        console.log("Selected Message:", message);
     };
 
     const handleCloseMessageInbox = () => {
@@ -56,12 +56,14 @@ export default function MainScreen() {
         setSelectedMessage(null);
     };
 
+
+
     return (
         <div className="frame">
             <Router>
-                <NavBar action={isAuthenticated} />
+                <NavBar action={state.isAuthenticated} />
                 <Routes>
-                    {isAuthenticated ? (
+                    {state.isAuthenticated ? (
                         <>
                             <Route path="/" element={<Homepage />} />
                             <Route path="/logout" element={<Logout action={handleLogout} />} />
